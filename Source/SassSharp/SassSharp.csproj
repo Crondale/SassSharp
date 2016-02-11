@@ -41,11 +41,21 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\CodeNode.cs" />
-    <Compile Include="Model\ScopeNode.cs" />
-    <Compile Include="Model\PropertyNode.cs" />
+    <Compile Include="Model\Css\CssProperty.cs" />
+    <Compile Include="Model\Css\CssSelector.cs" />
+    <Compile Include="Model\Css\CssSheet.cs" />
+    <Compile Include="Model\Expression.cs" />
+    <Compile Include="Model\Expressions\CombineNode.cs" />
+    <Compile Include="Model\Expressions\ExpressionNode.cs" />
+    <Compile Include="Model\Expressions\ReferenceNode.cs" />
+    <Compile Include="Model\Expressions\ValueNode.cs" />
+    <Compile Include="Model\Nodes\IncludeNode.cs" />
+    <Compile Include="Model\Nodes\MixinNode.cs" />
+    <Compile Include="Model\Nodes\ScopeNode.cs" />
+    <Compile Include="Model\Nodes\PropertyNode.cs" />
     <Compile Include="Model\ScssPackage.cs" />
-    <Compile Include="Model\SelectorNode.cs" />
-    <Compile Include="Model\VariableNode.cs" />
+    <Compile Include="Model\Nodes\SelectorNode.cs" />
+    <Compile Include="Model\Nodes\VariableNode.cs" />
     <Compile Include="ScssCompiler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScssReader.cs" />

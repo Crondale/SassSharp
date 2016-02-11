@@ -12,6 +12,7 @@ test {
     color: $primary-color;
     $primary-color: #FFA;
     test {
+        $primary-color: #FBA;
         color: $primary-color;
     }
     color: $primary-color;
