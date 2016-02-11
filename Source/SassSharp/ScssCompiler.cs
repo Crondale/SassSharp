@@ -60,7 +60,10 @@ namespace Crondale.SassSharp
             {
                 foreach (var s in selectorSplit)
                 {
-                    resultSplit.Add(r + " " + s);
+                    if(s.Contains("&"))
+                        resultSplit.Add(s.Replace("&", r));
+                    else
+                        resultSplit.Add(r + " " + s);
                 }
             }
 
