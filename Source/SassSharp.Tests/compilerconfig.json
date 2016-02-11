@@ -18,5 +18,9 @@
   {
     "outputFile": "testfiles/mixin1.css",
     "inputFile": "testfiles/mixin1.scss"
+  },
+  {
+    "outputFile": "testfiles/nesting2.css",
+    "inputFile": "testfiles/nesting2.scss"
   }
 ]

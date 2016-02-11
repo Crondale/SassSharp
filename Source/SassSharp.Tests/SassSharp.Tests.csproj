@@ -74,6 +74,9 @@
     <None Include="testfiles\nesting1.scss">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="testfiles\nesting2.scss">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="testfiles\variables1.scss">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -102,6 +105,14 @@
     </Content>
     <Content Include="testfiles\nesting1.min.css">
       <DependentUpon>nesting1.css</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="testfiles\nesting2.css">
+      <DependentUpon>nesting2.scss</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="testfiles\nesting2.min.css">
+      <DependentUpon>nesting2.css</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="testfiles\test.css">

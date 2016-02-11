@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using Crondale.SassSharp.Model;
 using Crondale.SassSharp.Model.Css;
 using Crondale.SassSharp.Model.Expressions;
@@ -47,6 +49,29 @@ namespace Crondale.SassSharp
             ProcessScope(tree, sheet, null, -1);
         }
 
+        private string ExpandSelector(string root, string selector)
+        {
+            string[] rootSplit = root.Split(',');
+            string[] selectorSplit = selector.Split(',');
+
+            List<string> resultSplit = new List<string>();
+
+            foreach (var r in rootSplit)
+            {
+                foreach (var s in selectorSplit)
+                {
+                    resultSplit.Add(r + " " + s);
+                }
+            }
+
+            string result = String.Join(", ", resultSplit);
+            
+            result = result.Replace(" &", "");
+            result = result.Replace("  ", " ");
+
+            return result;
+        }
+
         private void ProcessScope(ScopeNode scope, CssSheet sheet, CssSelector selector, int level)
         {
             if (scope is SelectorNode)
@@ -55,8 +80,7 @@ namespace Crondale.SassSharp
                 var s = snode.Selector;
                 if (selector != null)
                 {
-                    s = selector.Selector + " " + s;
-                    s = s.Replace(" &", "");
+                    s = ExpandSelector(selector.Selector, s);
                 }
                 
                 selector = new CssSelector(s, level);
