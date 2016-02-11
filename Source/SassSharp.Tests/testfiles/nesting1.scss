@@ -1,0 +1,31 @@
+﻿$font-stack:    Helvetica, sans-serif;
+$primary-color: #333;
+
+body {
+  font: 100% $font-stack;
+  color: $primary-color;
+}
+
+$primary-color: #FFF;
+
+test {
+    color: $primary-color;
+    $primary-color: #FFA;
+    test {
+        color: $primary-color;
+
+
+        some-class {
+            -webkit-align-content: center;
+        }
+
+        &:hover {
+            border-top-width: medium;
+        }
+    }
+    color: $primary-color;
+}
+
+
+
+

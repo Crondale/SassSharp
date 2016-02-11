@@ -1,0 +1,22 @@
+﻿[
+  {
+    "outputFile": "testfiles/test.css",
+    "inputFile": "testfiles/test.scss"
+  },
+  {
+    "outputFile": "testfiles/variables1.css",
+    "inputFile": "testfiles/variables1.scss"
+  },
+  {
+    "outputFile": "testfiles/nesting1.css",
+    "inputFile": "testfiles/nesting1.scss"
+  },
+  {
+    "outputFile": "testfiles/_settings.css",
+    "inputFile": "testfiles/_settings.scss"
+  },
+  {
+    "outputFile": "testfiles/mixin1.css",
+    "inputFile": "testfiles/mixin1.scss"
+  }
+]
