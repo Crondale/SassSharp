@@ -91,13 +91,12 @@ namespace Crondale.SassSharp
                 else if (node is IncludeNode)
                 {
                     var n = (IncludeNode)node;
-
+                    
                     MixinNode mn = scope.GetMixin(n.MixinName);
-                    mn.SetVariable(new VariableNode()
-                    {
-                        Name = "radius",
-                        Expression = new Expression(new []{ new ValueNode("10px")})
-                    });
+
+
+                    mn.Initialize(n.Arguments);
+
                     ProcessScope(mn, sheet, selector, level + 1);
                 }
                 else if (useNode is SelectorNode)

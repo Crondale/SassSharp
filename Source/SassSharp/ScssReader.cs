@@ -127,8 +127,16 @@ namespace Crondale.SassSharp
 
             if (m.Success)
             {
-                var result = new IncludeNode();
-                result.MixinName = m.Groups["name"].Value;
+                Group argsGroup = m.Groups["arg"];
+                Expression[] args = new Expression[argsGroup.Captures.Count];
+
+                for (int i = 0; i < argsGroup.Captures.Count; i++)
+                {
+                    args[i] = ParseExpression(argsGroup.Captures[i].Value);
+                }
+
+                var result = new IncludeNode(m.Groups["name"].Value, args);
+                
 
                 return result;
             }
@@ -208,13 +216,23 @@ namespace Crondale.SassSharp
 
         private ScopeNode ParseScopeNode(string source)
         {
-            var m = Regex.Match(source, @"^\s*@mixin (?<name>[^:\s]+)\s*\((?<arg>[^,)]+,?)*\)\s*$");
+            var m = Regex.Match(source, @"^\s*@mixin (?<name>[^:\s]+)\s*\((?:\s*\$(?<arg>[^,)]+),?)*\)\s*$");
 
             if (m.Success)
             {
-                var result = new MixinNode();
-                result.Name = m.Groups["name"].Value;
+                Group argsGroup = m.Groups["arg"];
+                VariableNode[] args = new VariableNode[argsGroup.Captures.Count];
 
+                for (int i = 0; i < argsGroup.Captures.Count; i++)
+                {
+                    args[i] = new VariableNode()
+                    {
+                        Name = argsGroup.Captures[i].Value
+                    };
+                }
+
+                var result = new MixinNode(m.Groups["name"].Value, args);
+                
                 return result;
             }
 
