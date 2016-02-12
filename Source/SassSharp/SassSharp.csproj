@@ -49,6 +49,7 @@
     <Compile Include="Model\Expressions\ExpressionNode.cs" />
     <Compile Include="Model\Expressions\ReferenceNode.cs" />
     <Compile Include="Model\Expressions\ValueNode.cs" />
+    <Compile Include="Model\Nodes\CommentNode.cs" />
     <Compile Include="Model\Nodes\IncludeNode.cs" />
     <Compile Include="Model\Nodes\MixinNode.cs" />
     <Compile Include="Model\Nodes\NamespaceNode.cs" />

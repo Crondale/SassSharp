@@ -172,7 +172,6 @@
       <DependentUpon>_settings.css</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="TextFile1.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SassSharp\SassSharp.csproj">

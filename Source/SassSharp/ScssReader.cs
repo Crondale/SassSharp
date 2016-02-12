@@ -52,6 +52,9 @@ namespace SassSharp
                             if (inCommentEnd)
                             {
                                 inComment = false;
+
+                                var node = new CommentNode(buffer.ToString());
+                                currentScope.Add(node);
                                 buffer.Clear();
                             }
                             break;

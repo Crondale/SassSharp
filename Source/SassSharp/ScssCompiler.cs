@@ -71,6 +71,10 @@ namespace SassSharp
 
                     selector.Properties.Add(new CssProperty(nspace + n.Name, value, level + 1));
                 }
+                else if (node is CommentNode)
+                {
+                    
+                }
                 else if (node is VariableNode)
                 {
                     var n = (VariableNode) node;
