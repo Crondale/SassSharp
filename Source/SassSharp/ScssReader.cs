@@ -15,14 +15,14 @@ namespace SassSharp
         {
             var package = new ScssPackage();
             ScopeNode currentScope = package;
-
-            var attributeBuffer = new List<string>();
-
+            
             var buffer = new StringBuilder();
             var paranthesesLevel = 0;
             var inQuotes = false;
             var inCommentStart = false;
+            var inCommentEnd = false;
             var inComment = false;
+            var inLineComment = false;
 
 
             while (!sr.EndOfStream)
@@ -41,6 +41,29 @@ namespace SassSharp
                 else if (inComment)
                 {
                     buffer.Append(c);
+
+                    switch (c)
+                    {
+                        case '*':
+                            if (!inLineComment)
+                                inCommentEnd = true;
+                            break;
+                        case '/':
+                            if (inCommentEnd)
+                            {
+                                inComment = false;
+                                buffer.Clear();
+                            }
+                            break;
+                        case '\n':
+                            if (inLineComment)
+                            {
+                                inLineComment = false;
+                                inComment = false;
+                                buffer.Clear();
+                            }
+                            break;
+                    }
                 }
                 else
                 {
@@ -48,15 +71,10 @@ namespace SassSharp
                     {
                         case ' ':
                             goto default;
-                        case '[':
-                            break;
-                        case ']':
-                            attributeBuffer.Add(buffer.ToString().Trim());
-                            buffer.Clear();
-                            break;
                         case '/':
                             if (inCommentStart)
                             {
+                                inLineComment = true;
                                 inComment = true;
                                 inCommentStart = false;
                             }
@@ -65,7 +83,11 @@ namespace SassSharp
                                 inCommentStart = true;
                             }
                             goto default;
-                        case '\n':
+                        case '*':
+                            if (inCommentStart)
+                            {
+                                inComment = true;
+                            }
                             goto default;
                         case ';':
                         {
@@ -89,7 +111,6 @@ namespace SassSharp
                                 var node = ParseScopeNode(buffer.ToString());
                                 currentScope.Add(node);
                                 currentScope = node;
-                                attributeBuffer.Clear();
                                 buffer.Clear();
                             }
                             break;
