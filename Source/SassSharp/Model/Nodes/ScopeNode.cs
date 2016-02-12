@@ -4,6 +4,7 @@ namespace Crondale.SassSharp.Model.Nodes
 {
     class ScopeNode : CodeNode
     {
+        protected readonly Dictionary<string, VariableNode> _variables = new Dictionary<string, VariableNode>();
         private readonly List<CodeNode> _nodes = new List<CodeNode>();
         
 
@@ -33,14 +34,33 @@ namespace Crondale.SassSharp.Model.Nodes
 
         public virtual void SetVariable(VariableNode node)
         {
-            Parent.SetVariable(node);
+            if(Parent.HasVariable(node.Name))
+                Parent.SetVariable(node);
+            else
+            {
+                _variables[node.Name] = node;
+            }
+            
+        }
+
+        public virtual bool HasVariable(string name)
+        {
+            if (_variables.ContainsKey(name))
+                return true;
+
+            return Parent.HasVariable(name);
+
         }
 
         public virtual VariableNode GetVariable(string name)
         {
+            VariableNode result = null;
+
+            if (_variables.TryGetValue(name, out result))
+                return result;
 
             return Parent.GetVariable(name);
-
+            
         }
 
         public virtual void SetMixin(MixinNode node)

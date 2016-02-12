@@ -15,3 +15,8 @@ a {
   body.firefox a {
     font-weight: normal; }
 
+#main {
+  color: black; }
+  #main-sidebar {
+    border: 1px solid; }
+

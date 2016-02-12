@@ -9,7 +9,7 @@ namespace Crondale.SassSharp.Model
 {
     class ScssPackage:ScopeNode
     {
-        readonly Dictionary<string, VariableNode> _variables = new Dictionary<string, VariableNode>();
+        
         readonly Dictionary<string, MixinNode> _mixins = new Dictionary<string, MixinNode>();
 
         public override void SetVariable(VariableNode node)
@@ -25,6 +25,12 @@ namespace Crondale.SassSharp.Model
                 throw new Exception($"Could not find variable: {name}");
 
             return result;
+        }
+
+        public override bool HasVariable(string name)
+        {
+            return _variables.ContainsKey(name);
+
         }
 
         public override void SetMixin(MixinNode node)
