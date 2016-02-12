@@ -188,17 +188,24 @@ namespace SassSharp
 
         private ExpressionNode ParseExpressionNode(string source, string opSource)
         {
+            char op = ' ';
+
+            opSource = opSource.Trim();
+
+            if (opSource.Length > 0)
+                op = opSource[0];
+
             if (source.StartsWith("$"))
             {
                 return new ReferenceNode(source.Substring(1))
                 {
-                    Operator = opSource[0]
+                    Operator = op
                 };
             }
 
             return new ValueNode(source)
             {
-                Operator = opSource[0]
+                Operator = op
             };
         }
 

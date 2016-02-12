@@ -1,19 +1,118 @@
-﻿using SassSharp.Model.Nodes;
+﻿using System;
+using System.Text.RegularExpressions;
+using SassSharp.Model.Nodes;
 
 namespace SassSharp.Model.Expressions
 {
-    internal class ValueNode : ExpressionNode
+    class ValueNode : ExpressionNode
     {
-        public ValueNode(string value)
+        public enum ValueNodeType
         {
-            Value = value;
+            Text,
+            Value,
+            Number
         }
 
-        public string Value { get; set; }
+        private ValueNodeType _type = ValueNodeType.Text;
+        private string _textValue = null;
+        private double _value = 0;
+
+        public ValueNode(double value, string unit)
+        {
+            _value = value;
+            _textValue = unit;
+
+            _type = ValueNodeType.Value;
+        }
+
+        public ValueNode(double value)
+        {
+            _value = value;
+
+            _type = ValueNodeType.Number;
+        }
+
+        public ValueNode(string value)
+        {
+            //TODO move to reader
+            var m = Regex.Match(value, "^(?<value>[0-9.]+)(?<unit>[a-z%]*)$");
+
+            if (m.Success)
+            {
+                if(!double.TryParse(m.Groups["value"].Value, out _value))
+                    throw new Exception("Failed to parse number");
+
+                _textValue = m.Groups["unit"].Value;
+
+                if(_textValue == "")
+                    _type = ValueNodeType.Number;
+                else
+                    _type = ValueNodeType.Value;
+            }
+            else
+            {
+                _textValue = value;
+            }
+        }
+
+        public string Value
+        {
+            get
+            {
+                switch (_type)
+                {
+                    case ValueNodeType.Number:
+                        return _value.ToString();
+                    case ValueNodeType.Value:
+                        return $"{_value}{_textValue}";
+                }
+                return _textValue;
+            }
+        }
 
         public override ValueNode Resolve(ScopeNode scope)
         {
             return this;
+        }
+
+        public static ValueNode operator *(ValueNode x, ValueNode y)
+        {
+            return checkAndCalculate(x, y, (a, b) => a * b);
+        }
+
+        public static ValueNode operator +(ValueNode x, ValueNode y)
+        {
+            return checkAndCalculate(x, y, (a, b) => a + b);
+        }
+
+        public static ValueNode operator -(ValueNode x, ValueNode y)
+        {
+            return checkAndCalculate(x, y, (a, b) => a - b);
+        }
+
+        public static ValueNode operator /(ValueNode x, ValueNode y)
+        {
+            return checkAndCalculate(x, y, (a, b) => a / b);
+        }
+
+        private static ValueNode checkAndCalculate(ValueNode x, ValueNode y, Func<double, double, double> calculation)
+        {
+            if (x._type == ValueNodeType.Text)
+                throw new Exception("Cannot multiply texts");
+
+            if (y._type == ValueNodeType.Text)
+                throw new Exception("Cannot multiply texts");
+
+            if (x._type == ValueNodeType.Value)
+            {
+                return new ValueNode(calculation(x._value, y._value), x._textValue);
+            }
+            else if (y._type == ValueNodeType.Value)
+            {
+                return new ValueNode(calculation(x._value, y._value), y._textValue);
+            }
+
+            return new ValueNode(calculation(y._value, x._value));
         }
     }
 }

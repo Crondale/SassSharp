@@ -26,5 +26,9 @@
   {
     "outputFile": "testfiles/nested-properties.css",
     "inputFile": "testfiles/nested-properties.scss"
+  },
+  {
+    "outputFile": "testfiles/arithmetic.css",
+    "inputFile": "testfiles/arithmetic.scss"
   }
 ]

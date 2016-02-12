@@ -27,9 +27,17 @@ namespace SassSharp.Model.Expressions
             {
                 case ' ':
                     return new ValueNode(a.Value + " " + b.Value);
+                case '*':
+                    return a * b;
+                case '+':
+                    return a + b;
+                case '-':
+                    return a - b;
+                case '/':
+                    return a / b;
             }
 
-            throw new Exception($"Invalid operator: {Operator}");
+            throw new Exception($"Invalid operator: {CombineOperator}");
         }
     }
 }
