@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Crondale.SassSharp.Model.Nodes;
+﻿using SassSharp.Model.Nodes;
 
-namespace Crondale.SassSharp.Model.Expressions
+namespace SassSharp.Model.Expressions
 {
-    class ReferenceNode:ExpressionNode
+    internal class ReferenceNode : ExpressionNode
     {
-
         public ReferenceNode(string variableName)
         {
             VariableName = variableName;

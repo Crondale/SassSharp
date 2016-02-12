@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
-using Crondale.SassSharp.Model;
-using Crondale.SassSharp.Model.Css;
-using Crondale.SassSharp.Model.Expressions;
-using Crondale.SassSharp.Model.Nodes;
+using SassSharp.Model;
+using SassSharp.Model.Css;
+using SassSharp.Model.Nodes;
 
-namespace Crondale.SassSharp
+namespace SassSharp
 {
     public class ScssCompiler
     {
-
         public string Compile(string source)
         {
-
             using (var sourceStream = new MemoryStream(Encoding.UTF8.GetBytes(source)))
             using (var destination = new MemoryStream())
             {
@@ -27,7 +22,6 @@ namespace Crondale.SassSharp
 
                 return Encoding.UTF8.GetString(destination.ToArray());
             }
-
         }
 
         public void Compile(StreamReader source, StreamWriter destination)
@@ -35,7 +29,7 @@ namespace Crondale.SassSharp
             var reader = new ScssReader();
 
             var tree = reader.ReadTree(source);
-            CssSheet sheet = new CssSheet();
+            var sheet = new CssSheet();
 
             ProcessTree(tree, sheet);
 
@@ -49,7 +43,7 @@ namespace Crondale.SassSharp
             ProcessScope(tree, sheet, null, -1);
         }
 
-        
+
         private void ProcessScope(ScopeNode scope, CssSheet sheet, CssSelector selector, int level, string nspace = "")
         {
             if (scope is SelectorNode)
@@ -60,7 +54,7 @@ namespace Crondale.SassSharp
                 {
                     s = ExpandSelector(selector.Selector, s);
                 }
-                
+
                 selector = new CssSelector(s, level);
                 sheet.Selectors.Add(selector);
             }
@@ -71,46 +65,44 @@ namespace Crondale.SassSharp
 
                 if (node is PropertyNode)
                 {
-                    var n = (PropertyNode)node;
+                    var n = (PropertyNode) node;
 
-                    string value = n.Expression.Resolve(scope).Value;
+                    var value = n.Expression.Resolve(scope).Value;
 
                     selector.Properties.Add(new CssProperty(nspace + n.Name, value, level + 1));
-
                 }
                 else if (node is VariableNode)
                 {
-                    var n = (VariableNode)node;
+                    var n = (VariableNode) node;
 
                     scope.SetVariable(n);
                 }
                 else if (node is MixinNode)
                 {
-                    var n = (MixinNode)node;
+                    var n = (MixinNode) node;
 
                     scope.SetMixin(n);
                 }
                 else if (node is NamespaceNode)
                 {
-                    int subLevel = level;
+                    var subLevel = level;
 
-                    var n = (NamespaceNode)node;
+                    var n = (NamespaceNode) node;
                     if (n.Header.Expression != null)
                     {
-                        string value = n.Header.Expression.Resolve(scope).Value;
+                        var value = n.Header.Expression.Resolve(scope).Value;
                         selector.Properties.Add(new CssProperty(n.Header.Name, value, level + 1));
 
                         subLevel++;
                     }
 
-                    ProcessScope((ScopeNode)node, sheet, selector, subLevel, n.Header.Name + "-");
-
+                    ProcessScope((ScopeNode) node, sheet, selector, subLevel, n.Header.Name + "-");
                 }
                 else if (node is IncludeNode)
                 {
-                    var n = (IncludeNode)node;
-                    
-                    MixinNode mn = scope.GetMixin(n.MixinName);
+                    var n = (IncludeNode) node;
+
+                    var mn = scope.GetMixin(n.MixinName);
 
 
                     mn.Initialize(n.Arguments);
@@ -119,17 +111,17 @@ namespace Crondale.SassSharp
                 }
                 else if (useNode is SelectorNode)
                 {
-                    ProcessScope((ScopeNode)node, sheet, selector, level + 1);
+                    ProcessScope((ScopeNode) node, sheet, selector, level + 1);
                 }
             }
         }
 
         private string ExpandSelector(string root, string selector)
         {
-            string[] rootSplit = root.Split(',');
-            string[] selectorSplit = selector.Split(',');
+            var rootSplit = root.Split(',');
+            var selectorSplit = selector.Split(',');
 
-            List<string> resultSplit = new List<string>();
+            var resultSplit = new List<string>();
 
             foreach (var r in rootSplit)
             {
@@ -142,7 +134,7 @@ namespace Crondale.SassSharp
                 }
             }
 
-            string result = String.Join(", ", resultSplit);
+            var result = string.Join(", ", resultSplit);
 
             result = result.Replace(" &", "");
             result = result.Replace("  ", " ");

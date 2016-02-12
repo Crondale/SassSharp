@@ -1,6 +1,6 @@
-﻿namespace Crondale.SassSharp.Model.Nodes
+﻿namespace SassSharp.Model.Nodes
 {
-    class SelectorNode : ScopeNode
+    internal class SelectorNode : ScopeNode
     {
         public string Selector { get; set; }
     }

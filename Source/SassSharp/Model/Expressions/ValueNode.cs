@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Crondale.SassSharp.Model.Nodes;
+﻿using SassSharp.Model.Nodes;
 
-namespace Crondale.SassSharp.Model.Expressions
+namespace SassSharp.Model.Expressions
 {
-    class ValueNode:ExpressionNode
+    internal class ValueNode : ExpressionNode
     {
-
         public ValueNode(string value)
         {
             Value = value;

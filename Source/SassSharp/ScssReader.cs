@@ -1,34 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Crondale.SassSharp.Model;
-using Crondale.SassSharp.Model.Expressions;
-using Crondale.SassSharp.Model.Nodes;
+using SassSharp.Model;
+using SassSharp.Model.Expressions;
+using SassSharp.Model.Nodes;
 
-namespace Crondale.SassSharp
+namespace SassSharp
 {
-    class ScssReader
+    internal class ScssReader
     {
         internal ScssPackage ReadTree(StreamReader sr)
         {
-            ScssPackage package = new ScssPackage();
+            var package = new ScssPackage();
             ScopeNode currentScope = package;
 
-            List<string> attributeBuffer = new List<string>();
+            var attributeBuffer = new List<string>();
 
-            StringBuilder buffer = new StringBuilder();
-            int paranthesesLevel = 0;
-            bool inQuotes = false;
-            bool inCommentStart = false;
-            bool inComment = false;
+            var buffer = new StringBuilder();
+            var paranthesesLevel = 0;
+            var inQuotes = false;
+            var inCommentStart = false;
+            var inComment = false;
 
 
             while (!sr.EndOfStream)
             {
-                char c = (char)sr.Read();
+                var c = (char) sr.Read();
 
                 if (inQuotes)
                 {
@@ -69,11 +68,11 @@ namespace Crondale.SassSharp
                         case '\n':
                             goto default;
                         case ';':
-                            {
-                                var node = ParseStatementNode(buffer.ToString());
-                                currentScope.Add(node);
-                                buffer.Clear();
-                            }
+                        {
+                            var node = ParseStatementNode(buffer.ToString());
+                            currentScope.Add(node);
+                            buffer.Clear();
+                        }
                             break;
                         case '"':
                             inQuotes = true;
@@ -97,7 +96,7 @@ namespace Crondale.SassSharp
                         case '}':
                             currentScope = currentScope.Parent;
 
-                            if(currentScope == null)
+                            if (currentScope == null)
                                 throw new Exception("Unexpected }");
                             break;
                         default:
@@ -127,16 +126,16 @@ namespace Crondale.SassSharp
 
             if (m.Success)
             {
-                Group argsGroup = m.Groups["arg"];
-                Expression[] args = new Expression[argsGroup.Captures.Count];
+                var argsGroup = m.Groups["arg"];
+                var args = new Expression[argsGroup.Captures.Count];
 
-                for (int i = 0; i < argsGroup.Captures.Count; i++)
+                for (var i = 0; i < argsGroup.Captures.Count; i++)
                 {
                     args[i] = ParseExpression(argsGroup.Captures[i].Value);
                 }
 
                 var result = new IncludeNode(m.Groups["name"].Value, args);
-                
+
 
                 return result;
             }
@@ -147,7 +146,7 @@ namespace Crondale.SassSharp
         [Obsolete]
         private IEnumerable<Expression> ParseValue(string source)
         {
-            Match m = Regex.Match(source, @"^(\s*(?:[a-zA-Z0-9_$%#-]+)\s*(?:(?:[+-/*])\s*(?:[a-zA-Z0-9_%#-]+)\s*)*)+\s*$");
+            var m = Regex.Match(source, @"^(\s*(?:[a-zA-Z0-9_$%#-]+)\s*(?:(?:[+-/*])\s*(?:[a-zA-Z0-9_%#-]+)\s*)*)+\s*$");
 
             if (!m.Success)
                 throw new Exception("Could not recognize value");
@@ -163,28 +162,28 @@ namespace Crondale.SassSharp
             if (string.IsNullOrWhiteSpace(source))
                 return null;
 
-            Match m = Regex.Match(source, @"^\s*(?<first>[a-zA-Z0-9_$%#,-]+)(?:(?<op>\s*[+-/*]\s*|\s+)(?<other>[a-zA-Z0-9_$%#,-]+)\s*)*\s*$");
+            var m = Regex.Match(source,
+                @"^\s*(?<first>[a-zA-Z0-9_$%#,-]+)(?:(?<op>\s*[+-/*]\s*|\s+)(?<other>[a-zA-Z0-9_$%#,-]+)\s*)*\s*$");
 
-            if(!m.Success)
+            if (!m.Success)
                 throw new Exception("Could not recognize expression");
 
-            Group firstGroup = m.Groups["first"];
-            Group othersGroup = m.Groups["other"];
-            Group opGroup = m.Groups["op"];
+            var firstGroup = m.Groups["first"];
+            var othersGroup = m.Groups["other"];
+            var opGroup = m.Groups["op"];
 
-            ExpressionNode[] nodes = new ExpressionNode[othersGroup.Captures.Count + 1];
-            
+            var nodes = new ExpressionNode[othersGroup.Captures.Count + 1];
+
             nodes[0] = ParseExpressionNode(firstGroup.Value, "+");
 
-            for (int i = 0; i < othersGroup.Captures.Count; i++)
+            for (var i = 0; i < othersGroup.Captures.Count; i++)
             {
-                nodes[i+1] = ParseExpressionNode(othersGroup.Captures[i].Value, opGroup.Captures[i].Value);
+                nodes[i + 1] = ParseExpressionNode(othersGroup.Captures[i].Value, opGroup.Captures[i].Value);
             }
 
-            Expression e = new Expression(nodes);
+            var e = new Expression(nodes);
 
             return e;
-
         }
 
         private ExpressionNode ParseExpressionNode(string source, string opSource)
@@ -206,7 +205,7 @@ namespace Crondale.SassSharp
         private PropertyNode ParsePropertyNode(string source)
         {
             var m = Regex.Match(source, @"^\s*(?<name>[^:\s]+)\s*:\s*(?<value>[^;]+)\s*$");
-            
+
             if (!m.Success)
                 throw new Exception("Failed to parse property");
 
@@ -223,19 +222,19 @@ namespace Crondale.SassSharp
 
             if (m.Success)
             {
-                Group argsGroup = m.Groups["arg"];
-                VariableNode[] args = new VariableNode[argsGroup.Captures.Count];
+                var argsGroup = m.Groups["arg"];
+                var args = new VariableNode[argsGroup.Captures.Count];
 
-                for (int i = 0; i < argsGroup.Captures.Count; i++)
+                for (var i = 0; i < argsGroup.Captures.Count; i++)
                 {
-                    args[i] = new VariableNode()
+                    args[i] = new VariableNode
                     {
                         Name = argsGroup.Captures[i].Value
                     };
                 }
 
                 var result = new MixinNode(m.Groups["name"].Value, args);
-                
+
                 return result;
             }
 
@@ -244,8 +243,8 @@ namespace Crondale.SassSharp
             {
                 var pn = ParsePropertyNode(source);
 
-                NamespaceNode result = new NamespaceNode(pn);
-                
+                var result = new NamespaceNode(pn);
+
                 return result;
             }
 

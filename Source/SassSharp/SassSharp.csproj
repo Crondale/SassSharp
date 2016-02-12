@@ -7,7 +7,7 @@
     <ProjectGuid>{7E91AD7E-51C7-4F5B-8CF6-F135D46F763B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Crondale.SassSharp</RootNamespace>
+    <RootNamespace>SassSharp</RootNamespace>
     <AssemblyName>SassSharp</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

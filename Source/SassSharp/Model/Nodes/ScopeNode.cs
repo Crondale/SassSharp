@@ -1,21 +1,14 @@
 ﻿using System.Collections.Generic;
 
-namespace Crondale.SassSharp.Model.Nodes
+namespace SassSharp.Model.Nodes
 {
-    class ScopeNode : CodeNode
+    internal class ScopeNode : CodeNode
     {
-        protected readonly Dictionary<string, VariableNode> _variables = new Dictionary<string, VariableNode>();
         private readonly List<CodeNode> _nodes = new List<CodeNode>();
-        
-
-        public IEnumerable<CodeNode> Nodes
-        {
-            get { return _nodes; }
-        }
+        protected readonly Dictionary<string, VariableNode> _variables = new Dictionary<string, VariableNode>();
 
         public ScopeNode()
         {
-            
         }
 
         public ScopeNode(params CodeNode[] nodes)
@@ -26,6 +19,12 @@ namespace Crondale.SassSharp.Model.Nodes
             }
         }
 
+
+        public IEnumerable<CodeNode> Nodes
+        {
+            get { return _nodes; }
+        }
+
         public virtual void Add(CodeNode node)
         {
             node.Parent = this;
@@ -34,13 +33,12 @@ namespace Crondale.SassSharp.Model.Nodes
 
         public virtual void SetVariable(VariableNode node)
         {
-            if(Parent.HasVariable(node.Name))
+            if (Parent.HasVariable(node.Name))
                 Parent.SetVariable(node);
             else
             {
                 _variables[node.Name] = node;
             }
-            
         }
 
         public virtual bool HasVariable(string name)
@@ -49,7 +47,6 @@ namespace Crondale.SassSharp.Model.Nodes
                 return true;
 
             return Parent.HasVariable(name);
-
         }
 
         public virtual VariableNode GetVariable(string name)
@@ -60,7 +57,6 @@ namespace Crondale.SassSharp.Model.Nodes
                 return result;
 
             return Parent.GetVariable(name);
-            
         }
 
         public virtual void SetMixin(MixinNode node)
@@ -70,10 +66,7 @@ namespace Crondale.SassSharp.Model.Nodes
 
         public virtual MixinNode GetMixin(string name)
         {
-
             return Parent.GetMixin(name);
-
         }
-
     }
 }

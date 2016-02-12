@@ -1,11 +1,9 @@
-﻿using Crondale.SassSharp.Model.Nodes;
+﻿using SassSharp.Model.Nodes;
 
-namespace Crondale.SassSharp.Model
+namespace SassSharp.Model
 {
-    abstract class CodeNode
+    internal abstract class CodeNode
     {
-
         public ScopeNode Parent { get; set; }
-
     }
 }

@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Crondale.SassSharp.Model.Nodes;
+using SassSharp.Model.Nodes;
 
-namespace Crondale.SassSharp.Model.Expressions
+namespace SassSharp.Model.Expressions
 {
-
-    class CombineNode:ExpressionNode
+    internal class CombineNode : ExpressionNode
     {
-
         public CombineNode(ExpressionNode a, ExpressionNode b, char op)
         {
             A = a;
@@ -26,8 +20,8 @@ namespace Crondale.SassSharp.Model.Expressions
 
         public override ValueNode Resolve(ScopeNode scope)
         {
-            ValueNode a = A.Resolve(scope);
-            ValueNode b = B.Resolve(scope);
+            var a = A.Resolve(scope);
+            var b = B.Resolve(scope);
 
             switch (CombineOperator)
             {
@@ -36,7 +30,6 @@ namespace Crondale.SassSharp.Model.Expressions
             }
 
             throw new Exception($"Invalid operator: {Operator}");
-
         }
     }
 }

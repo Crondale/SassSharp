@@ -1,6 +1,6 @@
-﻿namespace Crondale.SassSharp.Model.Nodes
+﻿namespace SassSharp.Model.Nodes
 {
-    class IncludeNode:ScopeNode
+    internal class IncludeNode : ScopeNode
     {
         public IncludeNode(string mixinName, Expression[] args)
         {

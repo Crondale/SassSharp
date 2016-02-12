@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Crondale.SassSharp.Model.Nodes
+﻿namespace SassSharp.Model.Nodes
 {
-    class MixinNode:ScopeNode
+    internal class MixinNode : ScopeNode
     {
-        
         private readonly VariableNode[] _args;
 
         public MixinNode(string name, VariableNode[] args)
@@ -14,11 +10,14 @@ namespace Crondale.SassSharp.Model.Nodes
             _args = args;
         }
 
+
+        public string Name { get; set; }
+
         public void Initialize(Expression[] args)
         {
-            for (int i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
-                SetVariable(new VariableNode()
+                SetVariable(new VariableNode
                 {
                     Name = _args[i].Name,
                     Expression = args[i]
@@ -30,9 +29,5 @@ namespace Crondale.SassSharp.Model.Nodes
         {
             _variables[node.Name] = node;
         }
-
-        
-
-        public string Name { get; set; }
     }
 }

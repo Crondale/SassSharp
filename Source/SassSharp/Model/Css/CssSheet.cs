@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
-namespace Crondale.SassSharp.Model.Css
+namespace SassSharp.Model.Css
 {
-    class CssSheet
+    internal class CssSheet
     {
-        public List<CssSelector> Selectors { get; }
-
         public CssSheet()
         {
             Selectors = new List<CssSelector>();
         }
+
+        public List<CssSelector> Selectors { get; }
     }
 }

@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Crondale.SassSharp.Model.Nodes;
+using SassSharp.Model.Nodes;
 
-namespace Crondale.SassSharp.Model
+namespace SassSharp.Model
 {
-    class ScssPackage:ScopeNode
+    internal class ScssPackage : ScopeNode
     {
-        
-        readonly Dictionary<string, MixinNode> _mixins = new Dictionary<string, MixinNode>();
+        private readonly Dictionary<string, MixinNode> _mixins = new Dictionary<string, MixinNode>();
 
         public override void SetVariable(VariableNode node)
         {
@@ -30,7 +26,6 @@ namespace Crondale.SassSharp.Model
         public override bool HasVariable(string name)
         {
             return _variables.ContainsKey(name);
-
         }
 
         public override void SetMixin(MixinNode node)
@@ -44,7 +39,7 @@ namespace Crondale.SassSharp.Model
 
             if (!_mixins.TryGetValue(name, out result))
                 throw new Exception($"Could not find variable: {name}");
-            
+
 
             return result;
         }
