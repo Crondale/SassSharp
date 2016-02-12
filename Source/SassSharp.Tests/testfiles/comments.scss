@@ -7,4 +7,8 @@ body { color: black; }
 // These comments are only one line long each.
 // They won't appear in the CSS output,
 // since they use the single-line comment syntax.
-a { color: green; }
+a { 
+    color: green; 
+        /*test*/
+    font-size: 1px; //test
+}
