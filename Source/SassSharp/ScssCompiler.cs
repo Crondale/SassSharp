@@ -49,33 +49,8 @@ namespace Crondale.SassSharp
             ProcessScope(tree, sheet, null, -1);
         }
 
-        private string ExpandSelector(string root, string selector)
-        {
-            string[] rootSplit = root.Split(',');
-            string[] selectorSplit = selector.Split(',');
-
-            List<string> resultSplit = new List<string>();
-
-            foreach (var r in rootSplit)
-            {
-                foreach (var s in selectorSplit)
-                {
-                    if(s.Contains("&"))
-                        resultSplit.Add(s.Replace("&", r));
-                    else
-                        resultSplit.Add(r + " " + s);
-                }
-            }
-
-            string result = String.Join(", ", resultSplit);
-            
-            result = result.Replace(" &", "");
-            result = result.Replace("  ", " ");
-
-            return result;
-        }
-
-        private void ProcessScope(ScopeNode scope, CssSheet sheet, CssSelector selector, int level)
+        
+        private void ProcessScope(ScopeNode scope, CssSheet sheet, CssSelector selector, int level, string nspace = "")
         {
             if (scope is SelectorNode)
             {
@@ -100,7 +75,7 @@ namespace Crondale.SassSharp
 
                     string value = n.Expression.Resolve(scope).Value;
 
-                    selector.Properties.Add(new CssProperty(n.Name, value));
+                    selector.Properties.Add(new CssProperty(nspace + n.Name, value, level + 1));
 
                 }
                 else if (node is VariableNode)
@@ -115,6 +90,22 @@ namespace Crondale.SassSharp
 
                     scope.SetMixin(n);
                 }
+                else if (node is NamespaceNode)
+                {
+                    int subLevel = level;
+
+                    var n = (NamespaceNode)node;
+                    if (n.Header.Expression != null)
+                    {
+                        string value = n.Header.Expression.Resolve(scope).Value;
+                        selector.Properties.Add(new CssProperty(n.Header.Name, value, level + 1));
+
+                        subLevel++;
+                    }
+
+                    ProcessScope((ScopeNode)node, sheet, selector, subLevel, n.Header.Name + "-");
+
+                }
                 else if (node is IncludeNode)
                 {
                     var n = (IncludeNode)node;
@@ -124,13 +115,39 @@ namespace Crondale.SassSharp
 
                     mn.Initialize(n.Arguments);
 
-                    ProcessScope(mn, sheet, selector, level + 1);
+                    ProcessScope(mn, sheet, selector, level);
                 }
                 else if (useNode is SelectorNode)
                 {
                     ProcessScope((ScopeNode)node, sheet, selector, level + 1);
                 }
             }
+        }
+
+        private string ExpandSelector(string root, string selector)
+        {
+            string[] rootSplit = root.Split(',');
+            string[] selectorSplit = selector.Split(',');
+
+            List<string> resultSplit = new List<string>();
+
+            foreach (var r in rootSplit)
+            {
+                foreach (var s in selectorSplit)
+                {
+                    if (s.Contains("&"))
+                        resultSplit.Add(s.Replace("&", r));
+                    else
+                        resultSplit.Add(r + " " + s);
+                }
+            }
+
+            string result = String.Join(", ", resultSplit);
+
+            result = result.Replace(" &", "");
+            result = result.Replace("  ", " ");
+
+            return result;
         }
     }
 }

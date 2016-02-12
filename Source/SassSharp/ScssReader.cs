@@ -160,6 +160,9 @@ namespace Crondale.SassSharp
 
         private Expression ParseExpression(string source)
         {
+            if (string.IsNullOrWhiteSpace(source))
+                return null;
+
             Match m = Regex.Match(source, @"^\s*(?<first>[a-zA-Z0-9_$%#,-]+)(?:(?<op>\s*[+-/*]\s*|\s+)(?<other>[a-zA-Z0-9_$%#,-]+)\s*)*\s*$");
 
             if(!m.Success)
@@ -200,7 +203,7 @@ namespace Crondale.SassSharp
             };
         }
 
-        private CodeNode ParsePropertyNode(string source)
+        private PropertyNode ParsePropertyNode(string source)
         {
             var m = Regex.Match(source, @"^\s*(?<name>[^:\s]+)\s*:\s*(?<value>[^;]+)\s*$");
             
@@ -232,6 +235,16 @@ namespace Crondale.SassSharp
                 }
 
                 var result = new MixinNode(m.Groups["name"].Value, args);
+                
+                return result;
+            }
+
+            m = Regex.Match(source, @":[^a-z]");
+            if (m.Success)
+            {
+                var pn = ParsePropertyNode(source);
+
+                NamespaceNode result = new NamespaceNode(pn);
                 
                 return result;
             }

@@ -51,6 +51,7 @@
     <Compile Include="Model\Expressions\ValueNode.cs" />
     <Compile Include="Model\Nodes\IncludeNode.cs" />
     <Compile Include="Model\Nodes\MixinNode.cs" />
+    <Compile Include="Model\Nodes\NamespaceNode.cs" />
     <Compile Include="Model\Nodes\ScopeNode.cs" />
     <Compile Include="Model\Nodes\PropertyNode.cs" />
     <Compile Include="Model\ScssPackage.cs" />

@@ -48,7 +48,7 @@ namespace Crondale.SassSharp
 
                 sw.Write("\n");
 
-                for(int i = 0; i <= selector.Level; i++)
+                for(int i = 0; i < property.Level; i++)
                     sw.Write("  ");
 
                 sw.Write(property.Name);

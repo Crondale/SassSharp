@@ -22,5 +22,9 @@
   {
     "outputFile": "testfiles/nesting2.css",
     "inputFile": "testfiles/nesting2.scss"
+  },
+  {
+    "outputFile": "testfiles/nested-properties.css",
+    "inputFile": "testfiles/nested-properties.scss"
   }
 ]

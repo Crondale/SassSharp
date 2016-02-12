@@ -11,8 +11,11 @@ namespace Crondale.SassSharp.Model.Css
         public string Name { get; set; }
         public string Value { get; set; }
 
-        public CssProperty(string name, string value)
+        public int Level { get; set; }
+
+        public CssProperty(string name, string value, int level)
         {
+            Level = level;
             Name = name;
             Value = value;
         }
