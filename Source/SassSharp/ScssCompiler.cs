@@ -56,7 +56,7 @@ namespace SassSharp
                 }
 
                 selector = new CssSelector(s, level);
-                sheet.Selectors.Add(selector);
+                sheet.Add(selector);
             }
 
             foreach (var node in scope.Nodes)
@@ -69,11 +69,14 @@ namespace SassSharp
 
                     var value = n.Expression.Resolve(scope).Value;
 
-                    selector.Properties.Add(new CssProperty(nspace + n.Name, value, level + 1));
+                    selector.Add(new CssProperty(nspace + n.Name, value, level + 1));
                 }
                 else if (node is CommentNode)
                 {
-                    
+                    if(selector == null)
+                        sheet.Add(new CssComment(((CommentNode)node).Comment, level + 1));
+                    else
+                        selector.Add(new CssComment(((CommentNode)node).Comment, level + 1));
                 }
                 else if (node is VariableNode)
                 {
@@ -95,7 +98,7 @@ namespace SassSharp
                     if (n.Header.Expression != null)
                     {
                         var value = n.Header.Expression.Resolve(scope).Value;
-                        selector.Properties.Add(new CssProperty(n.Header.Name, value, level + 1));
+                        selector.Add(new CssProperty(n.Header.Name, value, level + 1));
 
                         subLevel++;
                     }

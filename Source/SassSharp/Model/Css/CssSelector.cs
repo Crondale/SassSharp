@@ -2,20 +2,17 @@
 
 namespace SassSharp.Model.Css
 {
-    internal class CssSelector
+    internal class CssSelector:CssNode
     {
         public CssSelector(string selector, int level)
+            : base(level)
         {
             Selector = selector;
-            Level = level;
-            Properties = new List<CssProperty>();
         }
 
         public string Selector { get; set; }
 
 
-        public int Level { get; set; }
 
-        public List<CssProperty> Properties { get; }
     }
 }

@@ -2,13 +2,13 @@
 
 namespace SassSharp.Model.Css
 {
-    internal class CssSheet
+    internal class CssSheet:CssNode
     {
         public CssSheet()
+            : base(-1)
         {
-            Selectors = new List<CssSelector>();
+            
         }
 
-        public List<CssSelector> Selectors { get; }
     }
 }

@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\CodeNode.cs" />
+    <Compile Include="Model\Css\CssComment.cs" />
+    <Compile Include="Model\Css\CssNode.cs" />
     <Compile Include="Model\Css\CssProperty.cs" />
     <Compile Include="Model\Css\CssSelector.cs" />
     <Compile Include="Model\Css\CssSheet.cs" />

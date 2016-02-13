@@ -17,6 +17,7 @@ namespace SassSharp
             ScopeNode currentScope = package;
             
             var buffer = new StringBuilder();
+            var commentBuffer = new StringBuilder();
             var paranthesesLevel = 0;
             var inQuotes = false;
             var inCommentStart = false;
@@ -40,36 +41,48 @@ namespace SassSharp
                 }
                 else if (inComment)
                 {
-                    buffer.Append(c);
-
                     switch (c)
                     {
                         case '*':
                             if (!inLineComment)
                                 inCommentEnd = true;
-                            break;
+                            goto default;
                         case '/':
                             if (inCommentEnd)
                             {
                                 inComment = false;
 
-                                var node = new CommentNode(buffer.ToString());
+                                commentBuffer.Append(c);
+
+                                var node = new CommentNode(commentBuffer.ToString());
                                 currentScope.Add(node);
-                                buffer.Clear();
+                                commentBuffer.Clear();
+                                inCommentEnd = false;
+                                break;
                             }
-                            break;
+                            else
+                                goto default;
                         case '\n':
                             if (inLineComment)
                             {
                                 inLineComment = false;
                                 inComment = false;
-                                buffer.Clear();
+                                commentBuffer.Clear(); // Ignore line comments
+                                break;
                             }
+                            else
+                                goto default;
+                        case '\r':
+                            break;
+                        default:
+                            commentBuffer.Append(c);
                             break;
                     }
                 }
                 else
                 {
+                    inCommentEnd = false;
+
                     switch (c)
                     {
                         case ' ':
@@ -80,18 +93,29 @@ namespace SassSharp
                                 inLineComment = true;
                                 inComment = true;
                                 inCommentStart = false;
+
+                                //Move comment start to comment buffer
+                                buffer.Length--;
+                                commentBuffer.Append("//");
+                                break;
                             }
                             else
                             {
                                 inCommentStart = true;
+                                goto default;
                             }
-                            goto default;
                         case '*':
                             if (inCommentStart)
                             {
                                 inComment = true;
+
+                                //Move comment start to comment buffer
+                                buffer.Length--;
+                                commentBuffer.Append("/*");
+                                break;
                             }
-                            goto default;
+                            else
+                                goto default;
                         case ';':
                         {
                             var node = ParseStatementNode(buffer.ToString());
@@ -122,6 +146,8 @@ namespace SassSharp
 
                             if (currentScope == null)
                                 throw new Exception("Unexpected }");
+                            break;
+                        case '\r':
                             break;
                         default:
                             buffer.Append(c);

@@ -1,8 +1,9 @@
 ﻿namespace SassSharp.Model.Css
 {
-    internal class CssProperty
+    internal class CssProperty:CssNode
     {
         public CssProperty(string name, string value, int level)
+            :base(level)
         {
             Level = level;
             Name = name;
@@ -11,7 +12,5 @@
 
         public string Name { get; set; }
         public string Value { get; set; }
-
-        public int Level { get; set; }
     }
 }
