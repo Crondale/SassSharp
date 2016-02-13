@@ -33,8 +33,6 @@ namespace SassSharp
             {
                 writer.Write(sheet);
             }
-
-                
         }
 
         private void ProcessTree(ScssPackage tree, CssSheet sheet)
@@ -72,10 +70,10 @@ namespace SassSharp
                 }
                 else if (node is CommentNode)
                 {
-                    if(selector == null)
-                        sheet.Add(new CssComment(((CommentNode)node).Comment, level + 1));
+                    if (selector == null)
+                        sheet.Add(new CssComment(((CommentNode) node).Comment, level + 1));
                     else
-                        selector.Add(new CssComment(((CommentNode)node).Comment, level + 1));
+                        selector.Add(new CssComment(((CommentNode) node).Comment, level + 1));
                 }
                 else if (node is VariableNode)
                 {

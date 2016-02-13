@@ -3,20 +3,18 @@ using SassSharp.Model.Css;
 
 namespace SassSharp
 {
-    internal class CssWriter: StreamWriter
+    internal class CssWriter : StreamWriter
     {
-        private string _lineBreak = "\n";
-        private string _indentation = "  ";
+        private readonly string _indentation = "  ";
+        private readonly string _lineBreak = "\n";
 
         public CssWriter(Stream stream)
-            :base(stream)
+            : base(stream)
         {
-            
         }
 
         internal void Write(CssSheet sheet)
         {
-            
             WriteSheet(sheet);
             //this.Write(_lineBreak);
         }
@@ -28,29 +26,29 @@ namespace SassSharp
             {
                 if (node is CssSelector)
                 {
-                    lastLevel = WriteSelector(lastLevel, (CssSelector)node);
+                    lastLevel = WriteSelector(lastLevel, (CssSelector) node);
                 }
                 else if (node is CssComment)
                 {
                     WriteComment((CssComment) node);
                 }
-                this.Write(_lineBreak);
+                Write(_lineBreak);
             }
         }
 
         private int WriteSelector(int lastLevel, CssSelector selector)
         {
             if (selector.Level == 0 && lastLevel != -1)
-                this.Write(_lineBreak);
+                Write(_lineBreak);
 
             for (var i = 0; i < selector.Level; i++)
-                this.Write(_indentation);
+                Write(_indentation);
 
-            this.Write(selector.Selector);
-            this.Write(" {");
+            Write(selector.Selector);
+            Write(" {");
             WriteSelectorContent(selector);
-            this.Write(" }");
-            
+            Write(" }");
+
             lastLevel = selector.Level;
             return lastLevel;
         }
@@ -59,14 +57,14 @@ namespace SassSharp
         {
             foreach (var node in selector.Nodes)
             {
-                this.Write(_lineBreak);
+                Write(_lineBreak);
                 if (node is CssProperty)
                 {
                     WriteProperty((CssProperty) node);
                 }
                 if (node is CssComment)
                 {
-                    WriteComment((CssComment)node);
+                    WriteComment((CssComment) node);
                 }
             }
         }
@@ -74,20 +72,20 @@ namespace SassSharp
         private void WriteComment(CssComment comment)
         {
             for (var i = 0; i < comment.Level; i++)
-                this.Write(_indentation);
+                Write(_indentation);
 
-            this.Write(comment.Comment);
+            Write(comment.Comment);
         }
 
         private void WriteProperty(CssProperty property)
         {
             for (var i = 0; i < property.Level; i++)
-                this.Write(_indentation);
+                Write(_indentation);
 
-            this.Write(property.Name);
-            this.Write(": ");
-            this.Write(property.Value);
-            this.Write(";");
+            Write(property.Name);
+            Write(": ");
+            Write(property.Value);
+            Write(";");
         }
     }
 }

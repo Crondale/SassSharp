@@ -27,14 +27,14 @@ namespace SassSharp.Tests
         public void TestFile(string sourcePath)
         {
             //var sres = new LibSassNet.SassCompiler().CompileFile(sourcePath, OutputStyle.Nested, null, false);
-            var sres = new LibSassHost.SassCompiler().CompileFile(sourcePath, null, new CompilationOptions()
+            var sres = new SassCompiler().CompileFile(sourcePath, null, new CompilationOptions
             {
                 OutputStyle = OutputStyle.Nested,
                 LineFeedType = LineFeedType.Lf,
                 IndentType = IndentType.Space,
                 IndentWidth = 2
             });
-            
+
             var compiler = new ScssCompiler();
 
             var result = compiler.Compile(File.ReadAllText(sourcePath));

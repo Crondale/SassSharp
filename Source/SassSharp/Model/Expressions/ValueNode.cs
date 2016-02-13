@@ -4,7 +4,7 @@ using SassSharp.Model.Nodes;
 
 namespace SassSharp.Model.Expressions
 {
-    class ValueNode : ExpressionNode
+    internal class ValueNode : ExpressionNode
     {
         public enum ValueNodeType
         {
@@ -13,9 +13,10 @@ namespace SassSharp.Model.Expressions
             Number
         }
 
-        private ValueNodeType _type = ValueNodeType.Text;
-        private string _textValue = null;
-        private double _value = 0;
+        private readonly string _textValue;
+
+        private readonly ValueNodeType _type = ValueNodeType.Text;
+        private readonly double _value;
 
         public ValueNode(double value, string unit)
         {
@@ -39,12 +40,12 @@ namespace SassSharp.Model.Expressions
 
             if (m.Success)
             {
-                if(!double.TryParse(m.Groups["value"].Value, out _value))
+                if (!double.TryParse(m.Groups["value"].Value, out _value))
                     throw new Exception("Failed to parse number");
 
                 _textValue = m.Groups["unit"].Value;
 
-                if(_textValue == "")
+                if (_textValue == "")
                     _type = ValueNodeType.Number;
                 else
                     _type = ValueNodeType.Value;
@@ -77,7 +78,7 @@ namespace SassSharp.Model.Expressions
 
         public static ValueNode operator *(ValueNode x, ValueNode y)
         {
-            return checkAndCalculate(x, y, (a, b) => a * b);
+            return checkAndCalculate(x, y, (a, b) => a*b);
         }
 
         public static ValueNode operator +(ValueNode x, ValueNode y)
@@ -92,7 +93,7 @@ namespace SassSharp.Model.Expressions
 
         public static ValueNode operator /(ValueNode x, ValueNode y)
         {
-            return checkAndCalculate(x, y, (a, b) => a / b);
+            return checkAndCalculate(x, y, (a, b) => a/b);
         }
 
         private static ValueNode checkAndCalculate(ValueNode x, ValueNode y, Func<double, double, double> calculation)
@@ -107,7 +108,7 @@ namespace SassSharp.Model.Expressions
             {
                 return new ValueNode(calculation(x._value, y._value), x._textValue);
             }
-            else if (y._type == ValueNodeType.Value)
+            if (y._type == ValueNodeType.Value)
             {
                 return new ValueNode(calculation(x._value, y._value), y._textValue);
             }

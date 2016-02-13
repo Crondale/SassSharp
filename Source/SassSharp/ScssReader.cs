@@ -9,18 +9,17 @@ using SassSharp.Model.Nodes;
 
 namespace SassSharp
 {
-    internal class ScssReader: StreamReader
+    internal class ScssReader : StreamReader
     {
         public ScssReader(Stream stream) : base(stream)
         {
-            
         }
 
         internal ScssPackage ReadTree()
         {
             var package = new ScssPackage();
             ScopeNode currentScope = package;
-            
+
             var buffer = new StringBuilder();
             var commentBuffer = new StringBuilder();
             var paranthesesLevel = 0;
@@ -31,9 +30,9 @@ namespace SassSharp
             var inLineComment = false;
 
 
-            while (!this.EndOfStream)
+            while (!EndOfStream)
             {
-                var c = (char) this.Read();
+                var c = (char) Read();
 
                 if (inQuotes)
                 {
@@ -65,8 +64,7 @@ namespace SassSharp
                                 inCommentEnd = false;
                                 break;
                             }
-                            else
-                                goto default;
+                            goto default;
                         case '\n':
                             if (inLineComment)
                             {
@@ -75,8 +73,7 @@ namespace SassSharp
                                 commentBuffer.Clear(); // Ignore line comments
                                 break;
                             }
-                            else
-                                goto default;
+                            goto default;
                         case '\r':
                             break;
                         default:
@@ -104,11 +101,8 @@ namespace SassSharp
                                 commentBuffer.Append("//");
                                 break;
                             }
-                            else
-                            {
-                                inCommentStart = true;
-                                goto default;
-                            }
+                            inCommentStart = true;
+                            goto default;
                         case '*':
                             if (inCommentStart)
                             {
@@ -119,8 +113,7 @@ namespace SassSharp
                                 commentBuffer.Append("/*");
                                 break;
                             }
-                            else
-                                goto default;
+                            goto default;
                         case ';':
                         {
                             var node = ParseStatementNode(buffer.ToString());
@@ -243,7 +236,7 @@ namespace SassSharp
 
         private ExpressionNode ParseExpressionNode(string source, string opSource)
         {
-            char op = ' ';
+            var op = ' ';
 
             opSource = opSource.Trim();
 
@@ -300,6 +293,7 @@ namespace SassSharp
                 return result;
             }
 
+            //Check for extended properties
             m = Regex.Match(source, @":[^a-z]");
             if (m.Success)
             {

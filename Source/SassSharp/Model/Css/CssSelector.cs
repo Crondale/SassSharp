@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace SassSharp.Model.Css
+﻿namespace SassSharp.Model.Css
 {
-    internal class CssSelector:CssNode
+    internal class CssSelector : CssNode
     {
         public CssSelector(string selector, int level)
             : base(level)
@@ -11,8 +9,5 @@ namespace SassSharp.Model.Css
         }
 
         public string Selector { get; set; }
-
-
-
     }
 }

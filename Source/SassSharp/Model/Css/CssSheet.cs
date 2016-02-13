@@ -1,14 +1,10 @@
-﻿using System.Collections.Generic;
-
-namespace SassSharp.Model.Css
+﻿namespace SassSharp.Model.Css
 {
-    internal class CssSheet:CssNode
+    internal class CssSheet : CssNode
     {
         public CssSheet()
             : base(-1)
         {
-            
         }
-
     }
 }
