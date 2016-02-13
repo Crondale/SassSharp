@@ -9,9 +9,14 @@ using SassSharp.Model.Nodes;
 
 namespace SassSharp
 {
-    internal class ScssReader
+    internal class ScssReader: StreamReader
     {
-        internal ScssPackage ReadTree(StreamReader sr)
+        public ScssReader(Stream stream) : base(stream)
+        {
+            
+        }
+
+        internal ScssPackage ReadTree()
         {
             var package = new ScssPackage();
             ScopeNode currentScope = package;
@@ -26,9 +31,9 @@ namespace SassSharp
             var inLineComment = false;
 
 
-            while (!sr.EndOfStream)
+            while (!this.EndOfStream)
             {
-                var c = (char) sr.Read();
+                var c = (char) this.Read();
 
                 if (inQuotes)
                 {

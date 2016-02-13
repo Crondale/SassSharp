@@ -3,86 +3,91 @@ using SassSharp.Model.Css;
 
 namespace SassSharp
 {
-    internal class CssWriter
+    internal class CssWriter: StreamWriter
     {
         private string _lineBreak = "\n";
         private string _indentation = "  ";
 
-
-        internal void Write(CssSheet sheet, StreamWriter sw)
+        public CssWriter(Stream stream)
+            :base(stream)
         {
             
-            WriteSheet(sheet, sw);
-            //sw.Write(_lineBreak);
         }
 
-        private void WriteSheet(CssSheet sheet, StreamWriter sw)
+        internal void Write(CssSheet sheet)
+        {
+            
+            WriteSheet(sheet);
+            //this.Write(_lineBreak);
+        }
+
+        private void WriteSheet(CssSheet sheet)
         {
             var lastLevel = -1;
             foreach (var node in sheet.Nodes)
             {
                 if (node is CssSelector)
                 {
-                    lastLevel = WriteSelector(sw, lastLevel, (CssSelector)node);
+                    lastLevel = WriteSelector(lastLevel, (CssSelector)node);
                 }
                 else if (node is CssComment)
                 {
-                    WriteComment((CssComment) node, sw);
+                    WriteComment((CssComment) node);
                 }
-                sw.Write(_lineBreak);
+                this.Write(_lineBreak);
             }
         }
 
-        private int WriteSelector(StreamWriter sw, int lastLevel, CssSelector selector)
+        private int WriteSelector(int lastLevel, CssSelector selector)
         {
             if (selector.Level == 0 && lastLevel != -1)
-                sw.Write(_lineBreak);
+                this.Write(_lineBreak);
 
             for (var i = 0; i < selector.Level; i++)
-                sw.Write(_indentation);
+                this.Write(_indentation);
 
-            sw.Write(selector.Selector);
-            sw.Write(" {");
-            WriteSelectorContent(selector, sw);
-            sw.Write(" }");
+            this.Write(selector.Selector);
+            this.Write(" {");
+            WriteSelectorContent(selector);
+            this.Write(" }");
             
             lastLevel = selector.Level;
             return lastLevel;
         }
 
-        private void WriteSelectorContent(CssSelector selector, StreamWriter sw)
+        private void WriteSelectorContent(CssSelector selector)
         {
             foreach (var node in selector.Nodes)
             {
-                sw.Write(_lineBreak);
+                this.Write(_lineBreak);
                 if (node is CssProperty)
                 {
-                    WriteProperty((CssProperty) node, sw);
+                    WriteProperty((CssProperty) node);
                 }
                 if (node is CssComment)
                 {
-                    WriteComment((CssComment)node, sw);
+                    WriteComment((CssComment)node);
                 }
             }
         }
 
-        private void WriteComment(CssComment comment, StreamWriter sw)
+        private void WriteComment(CssComment comment)
         {
             for (var i = 0; i < comment.Level; i++)
-                sw.Write(_indentation);
+                this.Write(_indentation);
 
-            sw.Write(comment.Comment);
+            this.Write(comment.Comment);
         }
 
-        private void WriteProperty(CssProperty property, StreamWriter sw)
+        private void WriteProperty(CssProperty property)
         {
             for (var i = 0; i < property.Level; i++)
-                sw.Write(_indentation);
+                this.Write(_indentation);
 
-            sw.Write(property.Name);
-            sw.Write(": ");
-            sw.Write(property.Value);
-            sw.Write(";");
+            this.Write(property.Name);
+            this.Write(": ");
+            this.Write(property.Value);
+            this.Write(";");
         }
     }
 }

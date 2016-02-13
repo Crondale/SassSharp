@@ -14,28 +14,27 @@ namespace SassSharp
             using (var sourceStream = new MemoryStream(Encoding.UTF8.GetBytes(source)))
             using (var destination = new MemoryStream())
             {
-                using (var writer = new StreamWriter(destination))
-                using (var reader = new StreamReader(sourceStream))
-                {
-                    Compile(reader, writer);
-                }
+                Compile(sourceStream, destination);
 
                 return Encoding.UTF8.GetString(destination.ToArray());
             }
         }
 
-        public void Compile(StreamReader source, StreamWriter destination)
+        public void Compile(Stream source, Stream destination)
         {
-            var reader = new ScssReader();
+            var reader = new ScssReader(source);
 
-            var tree = reader.ReadTree(source);
+            var tree = reader.ReadTree();
             var sheet = new CssSheet();
 
             ProcessTree(tree, sheet);
 
-            var writer = new CssWriter();
+            using (var writer = new CssWriter(destination))
+            {
+                writer.Write(sheet);
+            }
 
-            writer.Write(sheet, destination);
+                
         }
 
         private void ProcessTree(ScssPackage tree, CssSheet sheet)
