@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using SassSharp.IO;
 using SassSharp.Model;
 using SassSharp.Model.Expressions;
 using SassSharp.Model.Nodes;
@@ -11,13 +12,16 @@ namespace SassSharp
 {
     internal class ScssReader : StreamReader
     {
-        public ScssReader(Stream stream) : base(stream)
+        public PathFile File { get; set; }
+
+        public ScssReader(PathFile file) : base(file.GetStream())
         {
+            File = file;
         }
 
         internal ScssPackage ReadTree()
         {
-            var package = new ScssPackage();
+            var package = new ScssPackage(File);
             ScopeNode currentScope = package;
 
             var buffer = new StringBuilder();
@@ -185,6 +189,15 @@ namespace SassSharp
                 var result = new IncludeNode(m.Groups["name"].Value, args);
 
 
+                return result;
+            }
+
+            m = Regex.Match(source, @"^\s*@import (?<path>[^;]+)\s*$");
+
+            if (m.Success)
+            {
+                var result = new ImportNode(m.Groups["path"].Value);
+                
                 return result;
             }
 

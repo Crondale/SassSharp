@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using SassSharp.IO;
 using SassSharp.Model.Nodes;
 
 namespace SassSharp.Model
@@ -7,6 +8,13 @@ namespace SassSharp.Model
     internal class ScssPackage : ScopeNode
     {
         private readonly Dictionary<string, MixinNode> _mixins = new Dictionary<string, MixinNode>();
+
+        public ScssPackage(PathFile file)
+        {
+            File = file;
+        }
+
+        public PathFile File { get; set; }
 
         public override void SetVariable(VariableNode node)
         {

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using SassSharp.IO;
 using SassSharp.Model;
 using SassSharp.Model.Css;
 using SassSharp.Model.Nodes;
@@ -9,22 +10,38 @@ namespace SassSharp
 {
     public class ScssCompiler
     {
-        public string Compile(string source)
+        
+
+        public ScssCompiler()
         {
-            using (var sourceStream = new MemoryStream(Encoding.UTF8.GetBytes(source)))
+            
+        }
+
+        public string CompileFile(string path)
+        {
+            PathFile file = new PathFile(new RealFileManager(), path);
+            //using (var sourceStream = file.GetStream())
             using (var destination = new MemoryStream())
             {
-                Compile(sourceStream, destination);
-
+                Compile(file, destination);
                 return Encoding.UTF8.GetString(destination.ToArray());
             }
         }
 
-        public void Compile(Stream source, Stream destination)
-        {
-            var reader = new ScssReader(source);
+        //public string Compile(string source)
+        //{
+        //    using (var sourceStream = new MemoryStream(Encoding.UTF8.GetBytes(source)))
+        //    using (var destination = new MemoryStream())
+        //    {
+        //        Compile(sourceStream, destination);
 
-            var tree = reader.ReadTree();
+        //        return Encoding.UTF8.GetString(destination.ToArray());
+        //    }
+        //}
+
+        public void Compile(PathFile source, Stream destination)
+        {
+            var tree = TreeFromFile(source);
             var sheet = new CssSheet();
 
             ProcessTree(tree, sheet);
@@ -35,13 +52,28 @@ namespace SassSharp
             }
         }
 
-        private void ProcessTree(ScssPackage tree, CssSheet sheet)
+        private ScssPackage TreeFromFile(PathFile file)
         {
-            ProcessScope(tree, sheet, null, -1);
+            using (var reader = new ScssReader(file))
+            {
+                return reader.ReadTree();
+            }
         }
 
+        private void ProcessTree(ScssPackage tree, CssSheet sheet)
+        {
+            ProcessScope(tree, tree, sheet, null, -1);
+        }
 
-        private void ProcessScope(ScopeNode scope, CssSheet sheet, CssSelector selector, int level, string nspace = "")
+        private void ProcessImport(string path, ScssPackage fromPackage, ScopeNode scope, CssSheet sheet, CssSelector selector, int level, string nspace = "")
+        {
+            var file = fromPackage.File.SolveReference(path);
+            var tree = TreeFromFile(file);
+
+            ProcessScope(tree, tree, sheet, selector, level, nspace);
+        }
+
+        private void ProcessScope(ScssPackage package, ScopeNode scope, CssSheet sheet, CssSelector selector, int level, string nspace = "")
         {
             if (scope is SelectorNode)
             {
@@ -75,6 +107,23 @@ namespace SassSharp
                     else
                         selector.Add(new CssComment(((CommentNode) node).Comment, level + 1));
                 }
+                else if (node is ImportNode)
+                {
+                    var n = (ImportNode)node;
+
+                    if (n.Path.Contains(".css")
+                        || n.Path.Contains("http://")
+                        || n.Path.Contains("url(")
+                        || n.Path.Contains(" "))
+                    {
+                        sheet.Add(new CssImport(n.Path, level + 1));
+                    }
+                    else
+                    {
+                        string path = n.Path.Trim('\"');
+                        ProcessImport(path, package, scope, sheet, selector, level, nspace);
+                    }
+                }
                 else if (node is VariableNode)
                 {
                     var n = (VariableNode) node;
@@ -100,7 +149,7 @@ namespace SassSharp
                         subLevel++;
                     }
 
-                    ProcessScope((ScopeNode) node, sheet, selector, subLevel, n.Header.Name + "-");
+                    ProcessScope(package, (ScopeNode) node, sheet, selector, subLevel, n.Header.Name + "-");
                 }
                 else if (node is IncludeNode)
                 {
@@ -111,11 +160,11 @@ namespace SassSharp
 
                     mn.Initialize(n.Arguments);
 
-                    ProcessScope(mn, sheet, selector, level);
+                    ProcessScope(package, mn, sheet, selector, level);
                 }
                 else if (useNode is SelectorNode)
                 {
-                    ProcessScope((ScopeNode) node, sheet, selector, level + 1);
+                    ProcessScope(package, (ScopeNode) node, sheet, selector, level + 1);
                 }
             }
         }

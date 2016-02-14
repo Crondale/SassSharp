@@ -32,8 +32,17 @@ namespace SassSharp
                 {
                     WriteComment((CssComment) node);
                 }
+                else if(node is CssImport)
+                {
+                    WriteImport((CssImport) node);
+                }
                 Write(_lineBreak);
             }
+        }
+
+        private void WriteImport(CssImport node)
+        {
+            Write("@import {0};", node.Path);
         }
 
         private int WriteSelector(int lastLevel, CssSelector selector)

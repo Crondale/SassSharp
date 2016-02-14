@@ -37,7 +37,7 @@ namespace SassSharp.Tests
 
             var compiler = new ScssCompiler();
 
-            var result = compiler.Compile(File.ReadAllText(sourcePath));
+            var result = compiler.CompileFile(sourcePath);
             var expected = sres.CompiledContent;
 
             // LibSass does not clean up line endings in commments
