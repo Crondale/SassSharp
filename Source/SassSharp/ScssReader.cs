@@ -196,7 +196,10 @@ namespace SassSharp
 
         private Expression ReadValue()
         {
+            List<ExpressionNode> tempNodes = new List<ExpressionNode>();
             var buffer = new StringBuilder();
+            bool afterSpace = false;
+            char op = '+';
 
             while (!EndOfStream)
             {
@@ -204,14 +207,48 @@ namespace SassSharp
 
                 if (c == '{' || c == ';')
                 {
-                    return ParseExpression(buffer.ToString());
+                    if (buffer.Length > 0)
+                    {
+                        tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                        op = c;
+                        buffer.Clear();
+                    }
+
+                    if (tempNodes.Count == 0)
+                        return null;
+
+                    return new Expression(tempNodes.ToArray());
                 }
 
                 c = (char)Read();
 
                 switch (c)
                 {
+                    case ' ':
+                        if (buffer.Length != 0)
+                            afterSpace = true;
+                        break;
+
+                    case '-':
+                    case '+':
+                    case '*':
+                    case '/':
+                        if(c == '-' && !afterSpace)
+                            goto default;
+
+                        tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                        op = c;
+                        buffer.Clear();
+                        afterSpace = false;
+                        break;
                     default:
+                        if (afterSpace)
+                        {
+                            tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                            op = ' ';
+                            buffer.Clear();
+                            afterSpace = false;
+                        }
                         buffer.Append(c);
                         break;
                 }
@@ -316,6 +353,7 @@ namespace SassSharp
 
         private Expression ParseExpression(string source)
         {
+            //throw new Exception("Not in use anymore");
             if (string.IsNullOrWhiteSpace(source))
                 return null;
             
@@ -345,6 +383,7 @@ namespace SassSharp
 
         private ExpressionNode ParseExpressionNode(string source, string opSource)
         {
+            //throw new Exception("Not in use anymore");
             var op = ' ';
 
             opSource = opSource.Trim();
@@ -352,6 +391,11 @@ namespace SassSharp
             if (opSource.Length > 0)
                 op = opSource[0];
 
+            return ParseExpressionNode(source, op);
+        }
+
+        private ExpressionNode ParseExpressionNode(string source, char op)
+        {
             if (source.StartsWith("$"))
             {
                 return new ReferenceNode(source.Substring(1))
@@ -407,6 +451,7 @@ namespace SassSharp
             m = Regex.Match(source, @":[^a-z]");
             if (m.Success)
             {
+                throw new Exception("Not in use anymore");
                 var pn = ParsePropertyNode(source);
 
                 var result = new NamespaceNode(pn);
