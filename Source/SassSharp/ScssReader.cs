@@ -41,17 +41,23 @@ namespace SassSharp
         {
             var package = new ScssPackage(File);
             ScopeNode currentScope = package;
+            currentScope = ReadScopeContent(currentScope);
 
+            return package;
+        }
+
+        private ScopeNode ReadScopeContent(ScopeNode currentScope)
+        {
             var buffer = new StringBuilder();
-            
+
             //States
             var inCommentStart = false;
             var paranthesesLevel = 0;
             var inDoubleQuotes = false;
-            
+
             while (!EndOfStream)
             {
-                var c = (char) Read();
+                var c = (char)Read();
 
                 if (inDoubleQuotes)
                 {
@@ -68,17 +74,20 @@ namespace SassSharp
                     switch (c)
                     {
                         case ' ':
+                            //Ignore starting white space
+                            if (buffer.Length == 0)
+                                break;
                             goto default;
                         case '/':
                             if (inCommentStart)
                             {
                                 ReadInlineComment();
-                                
+
                                 inCommentStart = false;
-                                
+
                                 //Remove the first slash from the buffer
                                 buffer.Length--;
-                                
+
                             }
                             else
                             {
@@ -99,12 +108,53 @@ namespace SassSharp
                             }
                             goto default;
                         case ';':
-                        {
-                            var node = ParseStatementNode(buffer.ToString());
-                            currentScope.Add(node);
-                            buffer.Clear();
-                            inCommentStart = false;
-                        }
+                            {
+                                var node = ParseStatementNode(buffer.ToString());
+                                currentScope.Add(node);
+                                buffer.Clear();
+                                inCommentStart = false;
+                            }
+                            break;
+                        case ':':
+                            char pc = (char) Peek();
+                            if (char.IsLetter(pc))//hover etc.
+                            {
+                                buffer.Append(c);
+                            }
+                            else
+                            {
+                                var expr = ReadValue();
+
+                                if (buffer[0] == '$')
+                                {
+                                    var node = new VariableNode();
+                                    node.Name = buffer.ToString().Trim().TrimStart('$');
+                                    node.Expression = expr;
+                                    buffer.Clear();
+                                    currentScope.Add(node);
+                                    
+                                    if ((char)Read() != ';')
+                                        throw new Exception("Excpected ;");
+                                }
+                                else { 
+                                    var pn = new PropertyNode();
+                                    pn.Name = buffer.ToString().Trim();
+                                    pn.Expression = expr;
+                                    buffer.Clear();
+
+                                    char pc2 = (char) Read();
+                                    if (pc2 == ';')
+                                    {
+                                        currentScope.Add(pn);
+                                    }
+                                    else
+                                    {
+                                        var result = new NamespaceNode(pn);
+                                        currentScope.Add(result);
+                                        currentScope = result;
+                                    }
+                                }
+                            }
                             break;
                         case '"':
                             inDoubleQuotes = true;
@@ -130,7 +180,8 @@ namespace SassSharp
                             if (currentScope == null)
                                 throw new Exception("Unexpected }");
                             break;
-                        case '\r':
+                        case '\n':
+                            inCommentStart = false;
                             break;
                         default:
                             inCommentStart = false;
@@ -140,9 +191,35 @@ namespace SassSharp
                 }
             }
 
-            return package;
+            return currentScope;
         }
 
+        private Expression ReadValue()
+        {
+            var buffer = new StringBuilder();
+
+            while (!EndOfStream)
+            {
+                var c = (char)Peek();
+
+                if (c == '{' || c == ';')
+                {
+                    return ParseExpression(buffer.ToString());
+                }
+
+                c = (char)Read();
+
+                switch (c)
+                {
+                    default:
+                        buffer.Append(c);
+                        break;
+                }
+            }
+
+            throw new Exception("Could not find en of expression");
+        }
+        
         private void ReadInlineComment()
         {
             var buffer = new StringBuilder("//");
@@ -199,6 +276,7 @@ namespace SassSharp
 
             if (m.Success)
             {
+                throw new Exception("Not in use anymore");
                 var result = new VariableNode();
                 result.Name = m.Groups["name"].Value;
                 result.Expression = ParseExpression(m.Groups["value"].Value);
@@ -290,6 +368,7 @@ namespace SassSharp
 
         private PropertyNode ParsePropertyNode(string source)
         {
+            throw new Exception("Not in use anymore");
             var m = Regex.Match(source, @"^\s*(?<name>[^:\s]+)\s*:\s*(?<value>[^;]+)\s*$");
 
             if (!m.Success)
