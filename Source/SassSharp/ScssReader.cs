@@ -14,9 +14,27 @@ namespace SassSharp
     {
         public PathFile File { get; set; }
 
+        private int _lineNumber = 0;
+
         public ScssReader(PathFile file) : base(file.GetStream())
         {
             File = file;
+        }
+
+        public override int Read()
+        {
+            int c = base.Read();
+
+            //Ignore CR
+            while ((char)c == '\r')
+            {
+                c = base.Read();
+            }
+
+            if ((char)c == '\n')
+                ++_lineNumber;
+
+            return c;
         }
 
         internal ScssPackage ReadTree()
@@ -25,76 +43,27 @@ namespace SassSharp
             ScopeNode currentScope = package;
 
             var buffer = new StringBuilder();
-            var commentBuffer = new StringBuilder();
-            var paranthesesLevel = 0;
-            var inQuotes = false;
+            
+            //States
             var inCommentStart = false;
-            var inCommentEnd = false;
-            var inComment = false;
-            var inLineComment = false;
-            int lineNumber = 0;
-
+            var paranthesesLevel = 0;
+            var inDoubleQuotes = false;
+            
             while (!EndOfStream)
             {
                 var c = (char) Read();
 
-                if (c == '\n')
-                    ++lineNumber;
-
-                if (inQuotes)
+                if (inDoubleQuotes)
                 {
                     buffer.Append(c);
 
                     if (c == '"')
                     {
-                        inQuotes = false;
-                    }
-                }
-                else if (inComment)
-                {
-                    switch (c)
-                    {
-                        case '*':
-                            if (!inLineComment)
-                            {
-                                inCommentEnd = true;
-                                commentBuffer.Append(c);
-                                break;
-                            }
-                            goto default;
-                        case '/':
-                            if (inCommentEnd)
-                            {
-                                inComment = false;
-
-                                commentBuffer.Append(c);
-
-                                var node = new CommentNode(commentBuffer.ToString());
-                                currentScope.Add(node);
-                                commentBuffer.Clear();
-                                inCommentEnd = false;
-                                break;
-                            }
-                            goto default;
-                        case '\n':
-                            if (inLineComment)
-                            {
-                                inLineComment = false;
-                                inComment = false;
-                                commentBuffer.Clear(); // Ignore line comments
-                                break;
-                            }
-                            goto default;
-                        case '\r':
-                            break;
-                        default:
-                            commentBuffer.Append(c);
-                            break;
+                        inDoubleQuotes = false;
                     }
                 }
                 else
                 {
-                    inCommentEnd = false;
 
                     switch (c)
                     {
@@ -103,26 +72,29 @@ namespace SassSharp
                         case '/':
                             if (inCommentStart)
                             {
-                                inLineComment = true;
-                                inComment = true;
+                                ReadInlineComment();
+                                
                                 inCommentStart = false;
-
-                                //Move comment start to comment buffer
+                                
+                                //Remove the first slash from the buffer
                                 buffer.Length--;
-                                commentBuffer.Append("//");
-                                break;
+                                
                             }
-                            inCommentStart = true;
-                            goto default;
+                            else
+                            {
+                                buffer.Append(c);
+                                inCommentStart = true;
+                            }
+                            break;
                         case '*':
                             if (inCommentStart)
                             {
-                                inComment = true;
+                                var node = ReadComment();
+                                currentScope.Add(node);
                                 inCommentStart = false;
 
-                                //Move comment start to comment buffer
+                                //Remove the first slash from the buffer
                                 buffer.Length--;
-                                commentBuffer.Append("/*");
                                 break;
                             }
                             goto default;
@@ -131,10 +103,11 @@ namespace SassSharp
                             var node = ParseStatementNode(buffer.ToString());
                             currentScope.Add(node);
                             buffer.Clear();
+                            inCommentStart = false;
                         }
                             break;
                         case '"':
-                            inQuotes = true;
+                            inDoubleQuotes = true;
                             goto default;
                         case '(':
                             paranthesesLevel++;
@@ -160,6 +133,7 @@ namespace SassSharp
                         case '\r':
                             break;
                         default:
+                            inCommentStart = false;
                             buffer.Append(c);
                             break;
                     }
@@ -167,6 +141,56 @@ namespace SassSharp
             }
 
             return package;
+        }
+
+        private void ReadInlineComment()
+        {
+            var buffer = new StringBuilder("//");
+
+            while (!EndOfStream)
+            {
+                var c = (char)Read();
+
+                if(c == '\n')
+                    return; //Ignore single line comments for now
+                else
+                {
+                    buffer.Append(c);
+                }
+            }
+        }
+
+        private CommentNode ReadComment()
+        {
+            var buffer = new StringBuilder("/*");
+            var inCommentEnd = false;
+
+            while (!EndOfStream)
+            {
+                var c = (char) Read();
+
+                switch (c)
+                {
+                    case '*':
+                        inCommentEnd = true;
+                        buffer.Append(c);
+                        break;
+                    case '/':
+                        if (inCommentEnd)
+                        {
+                            buffer.Append(c);
+
+                            return new CommentNode(buffer.ToString());
+                        }
+                        goto default;
+                    default:
+                        inCommentEnd = false;
+                        buffer.Append(c);
+                        break;
+                }
+            }
+
+            throw new Exception("Could not find comment end");
         }
 
         private CodeNode ParseStatementNode(string source)
@@ -212,27 +236,13 @@ namespace SassSharp
             return ParsePropertyNode(source);
         }
 
-        [Obsolete]
-        private IEnumerable<Expression> ParseValue(string source)
-        {
-            var m = Regex.Match(source, @"^(\s*(?:[a-zA-Z0-9_$%#-]+)\s*(?:(?:[+-/*])\s*(?:[a-zA-Z0-9_%#-]+)\s*)*)+\s*$");
-
-            if (!m.Success)
-                throw new Exception("Could not recognize value");
-
-            foreach (Capture capture in m.Groups[1].Captures)
-            {
-                yield return ParseExpression(capture.Value);
-            }
-        }
-
         private Expression ParseExpression(string source)
         {
             if (string.IsNullOrWhiteSpace(source))
                 return null;
-
+            
             var m = Regex.Match(source,
-                @"^\s*(?<first>[a-zA-Z0-9_$%#,-]+)(?:(?<op>\s*[+-/*]\s*|\s+)(?<other>[a-zA-Z0-9_$%#,-]+)\s*)*\s*$");
+                @"^\s*(?<first>[a-zA-Z0-9_!$%#,-]+)(?:(?<op>\s*[+-/*]\s*|\s+)(?<other>[a-zA-Z0-9_!$%#,-]+)\s*)*\s*$");
 
             if (!m.Success)
                 throw new Exception("Could not recognize expression");
