@@ -32,11 +32,14 @@ namespace SassSharp
             var inCommentEnd = false;
             var inComment = false;
             var inLineComment = false;
-
+            int lineNumber = 0;
 
             while (!EndOfStream)
             {
                 var c = (char) Read();
+
+                if (c == '\n')
+                    ++lineNumber;
 
                 if (inQuotes)
                 {
@@ -53,7 +56,11 @@ namespace SassSharp
                     {
                         case '*':
                             if (!inLineComment)
+                            {
                                 inCommentEnd = true;
+                                commentBuffer.Append(c);
+                                break;
+                            }
                             goto default;
                         case '/':
                             if (inCommentEnd)
@@ -111,6 +118,7 @@ namespace SassSharp
                             if (inCommentStart)
                             {
                                 inComment = true;
+                                inCommentStart = false;
 
                                 //Move comment start to comment buffer
                                 buffer.Length--;
