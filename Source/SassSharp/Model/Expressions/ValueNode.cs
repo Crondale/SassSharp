@@ -59,7 +59,7 @@ namespace SassSharp.Model.Expressions
             }
         }
 
-        public string Value
+        public override string Value
         {
             get
             {
@@ -74,7 +74,7 @@ namespace SassSharp.Model.Expressions
             }
         }
 
-        public override ValueNode Resolve(ScopeNode scope)
+        public override ExpressionNode Resolve(ScopeNode scope)
         {
             return this;
         }

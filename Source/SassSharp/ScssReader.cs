@@ -194,7 +194,7 @@ namespace SassSharp
             return currentScope;
         }
 
-        private ExpressionNode ReadValue()
+        private ValueList ReadValue()
         {
             ValueList result = new ValueList();
             List<ExpressionNode> tempNodes = new List<ExpressionNode>();
@@ -242,12 +242,22 @@ namespace SassSharp
 
                 switch (c)
                 {
+                    case ',':
+                        afterSpace = true;
+                        result.PreferComma = true;
+                        break;
                     case ' ':
                         if (buffer.Length != 0)
                             afterSpace = true;
                         break;
                     case '(':
-                        var inner = ReadValue();
+                        ExpressionNode inner = ReadValue();
+
+                        if (buffer.Length != 0)
+                        {
+                            inner = new FunctionCallNode(buffer.ToString(), (ValueList)inner);
+                            buffer.Clear();
+                        }
 
                         if (op == ' ')
                         {

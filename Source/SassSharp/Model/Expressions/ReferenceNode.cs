@@ -11,9 +11,14 @@ namespace SassSharp.Model.Expressions
 
         public string VariableName { get; set; }
 
-        public override ValueNode Resolve(ScopeNode scope)
+        public override ExpressionNode Resolve(ScopeNode scope)
         {
             return scope.GetVariable(VariableName).Expression.Resolve(scope);
+        }
+
+        public override string Value
+        {
+            get { return $"${VariableName}"; }
         }
     }
 }

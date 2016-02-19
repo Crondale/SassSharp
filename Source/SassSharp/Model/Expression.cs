@@ -70,7 +70,7 @@ namespace SassSharp.Model
             throw new Exception($"Unexpected operator: {op}");
         }
 
-        public ValueNode Resolve(ScopeNode scope)
+        public ExpressionNode Resolve(ScopeNode scope)
         {
             return Root.Resolve(scope);
         }
