@@ -141,7 +141,7 @@ namespace SassSharp
                     var subLevel = level;
 
                     var n = (NamespaceNode) node;
-                    if (n.Header.Expression != null)
+                    if (!n.Header.Expression.Empty)
                     {
                         var value = n.Header.Expression.Resolve(scope).Value;
                         selector.Add(new CssProperty(n.Header.Name, value, level + 1));

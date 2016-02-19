@@ -1,0 +1,8 @@
+﻿
+$colors: (#FFF, #AAA, #BBB);
+$colors2: #FFF #AAA #BBB;
+
+body{
+    color: nth($colors, 2);
+    background: nth($colors2, 2);
+}

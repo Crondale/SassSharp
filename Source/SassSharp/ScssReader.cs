@@ -129,7 +129,7 @@ namespace SassSharp
                                 {
                                     var node = new VariableNode();
                                     node.Name = buffer.ToString().Trim().TrimStart('$');
-                                    node.Expression = expr;
+                                    node.Expression = new Expression(expr);
                                     buffer.Clear();
                                     currentScope.Add(node);
                                     
@@ -139,7 +139,7 @@ namespace SassSharp
                                 else { 
                                     var pn = new PropertyNode();
                                     pn.Name = buffer.ToString().Trim();
-                                    pn.Expression = expr;
+                                    pn.Expression = new Expression(expr);
                                     buffer.Clear();
 
                                     char pc2 = (char) Read();
@@ -194,8 +194,9 @@ namespace SassSharp
             return currentScope;
         }
 
-        private Expression ReadValue()
+        private ExpressionNode ReadValue()
         {
+            ValueList result = new ValueList();
             List<ExpressionNode> tempNodes = new List<ExpressionNode>();
             var buffer = new StringBuilder();
             bool afterSpace = false;
@@ -211,16 +212,33 @@ namespace SassSharp
                     {
                         tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
                         op = c;
-                        buffer.Clear();
                     }
+                    
+                    if (tempNodes.Count != 0)
+                        result.Add(Expression.CalculateTree(tempNodes.ToArray()));
 
-                    if (tempNodes.Count == 0)
+                    if (result.Count == 0)
                         return null;
 
-                    return new Expression(tempNodes.ToArray());
+                    return result;
                 }
 
                 c = (char)Read();
+
+                if (c == ')')
+                {
+                    if (buffer.Length > 0)
+                    {
+                        tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                        op = c;
+                        buffer.Clear();
+                    }
+                    
+                    if (tempNodes.Count != 0)
+                        result.Add(Expression.CalculateTree(tempNodes.ToArray()));
+
+                    return result;
+                }
 
                 switch (c)
                 {
@@ -228,7 +246,19 @@ namespace SassSharp
                         if (buffer.Length != 0)
                             afterSpace = true;
                         break;
+                    case '(':
+                        var inner = ReadValue();
 
+                        if (op == ' ')
+                        {
+                            result.Add(inner);
+                        }
+                        else
+                        {
+                            tempNodes.Add(inner);
+                        }
+
+                        break;
                     case '-':
                     case '+':
                     case '*':
@@ -236,9 +266,13 @@ namespace SassSharp
                         if(c == '-' && !afterSpace)
                             goto default;
 
-                        tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                        if (buffer.Length > 0)
+                        {
+                            tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                            buffer.Clear();
+                        }
                         op = c;
-                        buffer.Clear();
+                        
                         afterSpace = false;
                         break;
                     default:
@@ -248,6 +282,9 @@ namespace SassSharp
                             op = ' ';
                             buffer.Clear();
                             afterSpace = false;
+
+                            result.Add(Expression.CalculateTree(tempNodes.ToArray()));
+                            tempNodes.Clear();
                         }
                         buffer.Append(c);
                         break;
@@ -314,11 +351,11 @@ namespace SassSharp
             if (m.Success)
             {
                 throw new Exception("Not in use anymore");
-                var result = new VariableNode();
+                /*var result = new VariableNode();
                 result.Name = m.Groups["name"].Value;
                 result.Expression = ParseExpression(m.Groups["value"].Value);
 
-                return result;
+                return result;*/
             }
 
             m = Regex.Match(source, @"^\s*@include (?<name>[^:\s]+)\s*\((?<arg>[^,)]+,?)*\)\s*$");
@@ -376,7 +413,7 @@ namespace SassSharp
                 nodes[i + 1] = ParseExpressionNode(othersGroup.Captures[i].Value, opGroup.Captures[i].Value);
             }
 
-            var e = new Expression(nodes);
+            var e = new Expression(Expression.CalculateTree(nodes));
 
             return e;
         }

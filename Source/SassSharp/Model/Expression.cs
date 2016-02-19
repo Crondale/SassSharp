@@ -7,14 +7,19 @@ namespace SassSharp.Model
 {
     internal class Expression
     {
-        public Expression(ExpressionNode[] nodes)
+        public Expression(ExpressionNode root)
         {
-            Root = CalculateTree(nodes);
+            Root = root;
         }
 
         public ExpressionNode Root { get; set; }
 
-        private ExpressionNode CalculateTree(ExpressionNode[] nodes)
+        public bool Empty
+        {
+            get { return Root == null; }
+        }
+
+        public static ExpressionNode CalculateTree(ExpressionNode[] nodes)
         {
             if (nodes.Length == 1) return nodes[0];
 
@@ -31,7 +36,7 @@ namespace SassSharp.Model
             }
 
             var index = 0;
-            var op = ' ';
+            var op = '+';
             for (index = 1; index < nodes.Length; index++)
             {
                 var filter = nodes[index];
@@ -48,7 +53,7 @@ namespace SassSharp.Model
             return new CombineNode(a, b, op);
         }
 
-        private int getOperatorIndex(char op)
+        private static int getOperatorIndex(char op)
         {
             switch (op)
             {

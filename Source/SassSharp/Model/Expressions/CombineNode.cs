@@ -25,8 +25,6 @@ namespace SassSharp.Model.Expressions
 
             switch (CombineOperator)
             {
-                case ' ':
-                    return new ValueNode(a.Value + " " + b.Value);
                 case '*':
                     return a*b;
                 case '+':

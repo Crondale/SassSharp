@@ -7,5 +7,7 @@ namespace SassSharp.Model.Expressions
         public char Operator { get; set; }
 
         public abstract ValueNode Resolve(ScopeNode scope);
+
+        
     }
 }

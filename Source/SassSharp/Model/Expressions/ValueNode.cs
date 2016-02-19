@@ -35,6 +35,9 @@ namespace SassSharp.Model.Expressions
 
         public ValueNode(string value)
         {
+            if (value == "")
+                throw new ArgumentException("Can't be empty");
+
             //TODO move to reader
             var m = Regex.Match(value, "^(?<value>[0-9.]+)(?<unit>[a-z%]*)$");
 
