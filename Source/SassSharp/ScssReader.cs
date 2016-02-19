@@ -201,103 +201,131 @@ namespace SassSharp
             var buffer = new StringBuilder();
             bool afterSpace = false;
             char op = '+';
+            string key = null;
+            bool inDoubleQuotes = false;
 
             while (!EndOfStream)
             {
-                var c = (char)Peek();
-
-                if (c == '{' || c == ';')
+                if (inDoubleQuotes)
                 {
-                    if (buffer.Length > 0)
+                    var c = (char) Read();
+
+                    buffer.Append(c);
+
+                    if (c == '"')
                     {
-                        tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
-                        op = c;
+                        inDoubleQuotes = false;
                     }
-                    
-                    if (tempNodes.Count != 0)
-                        result.Add(Expression.CalculateTree(tempNodes.ToArray()));
-
-                    if (result.Count == 0)
-                        return null;
-
-                    return result;
+                    continue;
                 }
-
-                c = (char)Read();
-
-                if (c == ')')
+                else
                 {
-                    if (buffer.Length > 0)
+
+                    var c = (char) Peek();
+
+                    if (c == '{' || c == ';')
                     {
-                        tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
-                        op = c;
-                        buffer.Clear();
+                        if (buffer.Length > 0)
+                        {
+                            tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                        }
+
+                        if (tempNodes.Count != 0)
+                        {
+                            result.Add(key, Expression.CalculateTree(tempNodes.ToArray()));
+                            key = null;
+                        }
+
+                        if (result.Count == 0)
+                            return null;
+
+                        return result;
                     }
-                    
-                    if (tempNodes.Count != 0)
-                        result.Add(Expression.CalculateTree(tempNodes.ToArray()));
 
-                    return result;
-                }
+                    c = (char) Read();
 
-                switch (c)
-                {
-                    case ',':
-                        afterSpace = true;
-                        result.PreferComma = true;
-                        break;
-                    case ' ':
-                        if (buffer.Length != 0)
-                            afterSpace = true;
-                        break;
-                    case '(':
-                        ExpressionNode inner = ReadValue();
-
-                        if (buffer.Length != 0)
-                        {
-                            inner = new FunctionCallNode(buffer.ToString(), (ValueList)inner);
-                            buffer.Clear();
-                        }
-
-                        if (op == ' ')
-                        {
-                            result.Add(inner);
-                        }
-                        else
-                        {
-                            tempNodes.Add(inner);
-                        }
-
-                        break;
-                    case '-':
-                    case '+':
-                    case '*':
-                    case '/':
-                        if(c == '-' && !afterSpace)
-                            goto default;
-
+                    if (c == ')')
+                    {
                         if (buffer.Length > 0)
                         {
                             tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
                             buffer.Clear();
                         }
-                        op = c;
-                        
-                        afterSpace = false;
-                        break;
-                    default:
-                        if (afterSpace)
-                        {
-                            tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
-                            op = ' ';
-                            buffer.Clear();
-                            afterSpace = false;
 
-                            result.Add(Expression.CalculateTree(tempNodes.ToArray()));
-                            tempNodes.Clear();
+                        if (tempNodes.Count != 0)
+                        {
+                            result.Add(key, Expression.CalculateTree(tempNodes.ToArray()));
+                            key = null;
                         }
-                        buffer.Append(c);
-                        break;
+
+                        return result;
+                    }
+
+                    switch (c)
+                    {
+                        case ',':
+                            if (buffer.Length != 0)
+                                afterSpace = true;
+                            result.PreferComma = true;
+                            break;
+                        case ' ':
+                            if (buffer.Length != 0)
+                                afterSpace = true;
+                            break;
+                        case '(':
+                            ExpressionNode inner = ReadValue();
+
+                            if (buffer.Length != 0)
+                            {
+                                inner = new FunctionCallNode(buffer.ToString(), (ValueList) inner);
+                                buffer.Clear();
+                            }
+
+                            inner.Operator = op;
+                            tempNodes.Add(inner);
+
+                            break;
+                        case '-':
+                        case '+':
+                        case '*':
+                        case '/':
+                            if (c == '-' && !afterSpace)
+                                goto default;
+
+                            if (buffer.Length > 0)
+                            {
+                                tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                                buffer.Clear();
+                            }
+                            op = c;
+
+                            afterSpace = false;
+                            break;
+                        case '\n':
+                            break;
+                        case '"':
+                            inDoubleQuotes = true;
+                            goto default;
+                        case ':':
+                            key = buffer.ToString().Trim('\"', '\'');
+                            buffer.Clear();
+                            break;
+                        default:
+                            if (afterSpace)
+                            {
+                                tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                                op = ' ';
+                                buffer.Clear();
+                                afterSpace = false;
+
+                                result.Add(key, Expression.CalculateTree(tempNodes.ToArray()));
+                                tempNodes.Clear();
+                                key = null;
+                            }
+                            buffer.Append(c);
+                            break;
+                    }
+
                 }
             }
 

@@ -15,5 +15,10 @@ namespace SassSharp.Model.Expressions
         {
             return int.Parse(v.Value);
         }
+
+        public static explicit operator string (ExpressionNode v)
+        {
+            return v.Value;
+        }
     }
 }

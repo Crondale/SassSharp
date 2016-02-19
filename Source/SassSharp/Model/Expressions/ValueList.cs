@@ -32,13 +32,19 @@ namespace SassSharp.Model
 
         public void Add(ExpressionNode value)
         {
-            _items.Add(value);
+            Add(null, value);
         }
-
-        public void Set(string key, ExpressionNode value)
+        public void Add(string key, ExpressionNode value)
         {
+            if (key != null)
+            {
+                _keys[key] = _items.Count;
+            }
+
             _items.Add(value);
+            
         }
+        
 
         public override ExpressionNode Resolve(ScopeNode scope)
         {
@@ -53,7 +59,14 @@ namespace SassSharp.Model
                 valueList.Add(expressionNode.Resolve(scope));
             }
 
+            valueList.SetKeys(_keys);
+
             return valueList;
+        }
+
+        private void SetKeys(Dictionary<string, int> keys)
+        {
+            _keys = keys;
         }
 
         public override string Value
@@ -68,6 +81,16 @@ namespace SassSharp.Model
         public ExpressionNode this[int i]
         {
             get { return _items[i]; }
+        }
+
+        public ExpressionNode this[string key]
+        {
+            get
+            {
+                key = key.Trim('\"', '\'');
+
+                return _items[_keys[key]];
+            }
         }
 
         public static ValueList From(ExpressionNode node)  // explicit byte to digit conversion operator

@@ -27,11 +27,21 @@ namespace SassSharp.Model.Expressions
             switch (Name)
             {
                 case "nth":
+                {
                     var vs = ValueList.From(args[0]);
 
-                    int index = (int)args[1];
-                    
+                    int index = (int) args[1];
+
                     return vs[index - 1];
+                }
+                case "map-get":
+                {
+                    var vs = ValueList.From(args[0]);
+
+                    string key = (string) args[1];
+
+                    return vs[key];
+                }
             }
 
 
