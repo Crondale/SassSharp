@@ -192,11 +192,7 @@ namespace SassSharp
                             goto default;
                         case ';':
                             {
-                                throw new Exception("Why here?");
-                                var node = ParseStatementNode(buffer.ToString());
-                                currentScope.Add(node);
-                                buffer.Clear();
-                                inCommentStart = false;
+                                throw new Exception("Unexpected ;");
                             }
                             break;
                         case ':':
@@ -307,6 +303,9 @@ namespace SassSharp
                 case "import":
                     ReadImport(currentScope);
                     break;
+                case "function":
+                    ReadFunction(currentScope);
+                    break;
                 default:
                     throw new Exception($"Could not recognize @{type}");
             }
@@ -338,8 +337,23 @@ namespace SassSharp
         {
             string name = ReadName();
             var args = ReadArgumentCall();
+            Expect(';');
+
             var result = new IncludeNode(name, args.ToArray());
             currentScope.Add(result);
+        }
+
+        private void ReadFunction(ScopeNode currentScope)
+        {
+            string name = ReadName();
+
+            var args = ReadArgumentDefinition();
+
+            var node = new FunctionNode(name, args.ToArray());
+            Expect('{');
+            ReadScopeContent(node);
+            currentScope.Add(node);
+
         }
 
         private IEnumerable<Expression> ReadArgumentCall()
@@ -353,7 +367,7 @@ namespace SassSharp
                 SkipWhitespace();
                 char c = (char)Peek();
 
-                if (c == ';')
+                if (c == ')')
                 {
                     Read();
                     return result;
@@ -468,7 +482,7 @@ namespace SassSharp
 
                     var c = (char) Peek();
 
-                    if (c == '{' || c == ';' || (c == ',' && returnOnComma))
+                    if (c == ')' || c == '{' || c == ';' || (c == ',' && returnOnComma))
                     {
                         if (buffer.Length > 0)
                         {
@@ -478,7 +492,6 @@ namespace SassSharp
                         if (tempNodes.Count != 0)
                         {
                             result.Add(key, Expression.CalculateTree(tempNodes.ToArray()));
-                            key = null;
                         }
 
                         if (result.Count == 0)
@@ -488,23 +501,6 @@ namespace SassSharp
                     }
 
                     c = (char) Read();
-
-                    if (c == ')')
-                    {
-                        if (buffer.Length > 0)
-                        {
-                            tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
-                            buffer.Clear();
-                        }
-
-                        if (tempNodes.Count != 0)
-                        {
-                            result.Add(key, Expression.CalculateTree(tempNodes.ToArray()));
-                            key = null;
-                        }
-
-                        return result;
-                    }
 
                     switch (c)
                     {
@@ -519,6 +515,8 @@ namespace SassSharp
                             break;
                         case '(':
                             ExpressionNode inner = ReadValue(false);
+
+                            Expect(')');
 
                             if (buffer.Length != 0)
                             {
@@ -627,94 +625,7 @@ namespace SassSharp
             throw new Exception("Could not find comment end");
         }
 
-        private CodeNode ParseStatementNode(string source)
-        {
-            var m = Regex.Match(source, @"^\s*\$(?<name>[^:\s]+):\s*(?<value>[^;]+)\s*$");
 
-            if (m.Success)
-            {
-                throw new Exception("Not in use anymore");
-                /*var result = new VariableNode();
-                result.Name = m.Groups["name"].Value;
-                result.Expression = ParseExpression(m.Groups["value"].Value);
-
-                return result;*/
-            }
-
-            m = Regex.Match(source, @"^\s*@include (?<name>[^:\s]+)\s*\((?<arg>[^,)]+,?)*\)\s*$");
-
-            if (m.Success)
-            {
-                throw new Exception("Not in use");
-                var argsGroup = m.Groups["arg"];
-                var args = new Expression[argsGroup.Captures.Count];
-
-                for (var i = 0; i < argsGroup.Captures.Count; i++)
-                {
-                    args[i] = ParseExpression(argsGroup.Captures[i].Value);
-                }
-
-                var result = new IncludeNode(m.Groups["name"].Value, args);
-
-
-                return result;
-            }
-
-            m = Regex.Match(source, @"^\s*@import (?<path>[^;]+)\s*$");
-
-            if (m.Success)
-            {
-                throw new Exception("Not in use");
-                var result = new ImportNode(m.Groups["path"].Value);
-                
-                return result;
-            }
-
-            return ParsePropertyNode(source);
-        }
-
-        private Expression ParseExpression(string source)
-        {
-            //throw new Exception("Not in use anymore");
-            if (string.IsNullOrWhiteSpace(source))
-                return null;
-            
-            var m = Regex.Match(source,
-                @"^\s*(?<first>[a-zA-Z0-9_!$%#,-]+)(?:(?<op>\s*[+-/*]\s*|\s+)(?<other>[a-zA-Z0-9_!$%#,-]+)\s*)*\s*$");
-
-            if (!m.Success)
-                throw new Exception("Could not recognize expression");
-
-            var firstGroup = m.Groups["first"];
-            var othersGroup = m.Groups["other"];
-            var opGroup = m.Groups["op"];
-
-            var nodes = new ExpressionNode[othersGroup.Captures.Count + 1];
-
-            nodes[0] = ParseExpressionNode(firstGroup.Value, "+");
-
-            for (var i = 0; i < othersGroup.Captures.Count; i++)
-            {
-                nodes[i + 1] = ParseExpressionNode(othersGroup.Captures[i].Value, opGroup.Captures[i].Value);
-            }
-
-            var e = new Expression(Expression.CalculateTree(nodes));
-
-            return e;
-        }
-
-        private ExpressionNode ParseExpressionNode(string source, string opSource)
-        {
-            //throw new Exception("Not in use anymore");
-            var op = ' ';
-
-            opSource = opSource.Trim();
-
-            if (opSource.Length > 0)
-                op = opSource[0];
-
-            return ParseExpressionNode(source, op);
-        }
 
         private ExpressionNode ParseExpressionNode(string source, char op)
         {
@@ -732,64 +643,6 @@ namespace SassSharp
             };
         }
 
-        private PropertyNode ParsePropertyNode(string source)
-        {
-            throw new Exception("Not in use anymore");
-            var m = Regex.Match(source, @"^\s*(?<name>[^:\s]+)\s*:\s*(?<value>[^;]+)\s*$");
-
-            if (!m.Success)
-                throw new Exception("Failed to parse property");
-
-            var result = new PropertyNode();
-            result.Name = m.Groups["name"].Value;
-            result.Expression = ParseExpression(m.Groups["value"].Value);
-
-            return result;
-        }
-
-        private ScopeNode ParseScopeNode(string source)
-        {
-            throw new Exception("Not in use anymore");
-            var m = Regex.Match(source, @"^\s*@mixin (?<name>[^:\s]+)\s*\((?:\s*\$(?<arg>[^,)]+),?)*\)\s*$");
-
-            if (m.Success)
-            {
-                var argsGroup = m.Groups["arg"];
-                var args = new VariableNode[argsGroup.Captures.Count];
-
-                for (var i = 0; i < argsGroup.Captures.Count; i++)
-                {
-                    args[i] = new VariableNode
-                    {
-                        Name = argsGroup.Captures[i].Value
-                    };
-                }
-
-                var result = new MixinNode(m.Groups["name"].Value, args);
-
-                return result;
-            }
-
-            //Check for extended properties
-            m = Regex.Match(source, @":[^a-z]");
-            if (m.Success)
-            {
-                throw new Exception("Not in use anymore");
-                var pn = ParsePropertyNode(source);
-
-                var result = new NamespaceNode(pn);
-
-                return result;
-            }
-
-            {
-                source = source.Trim();
-
-                var result = new SelectorNode();
-                result.Selector = source;
-
-                return result;
-            }
-        }
+        
     }
 }
