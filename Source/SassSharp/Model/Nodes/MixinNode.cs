@@ -29,5 +29,10 @@
         {
             _variables[node.Name] = node;
         }
+
+        public override string ToString()
+        {
+            return $"@mixin {Name}";
+        }
     }
 }
