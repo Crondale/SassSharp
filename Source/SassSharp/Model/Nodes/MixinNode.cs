@@ -17,11 +17,7 @@
         {
             for (var i = 0; i < args.Length; i++)
             {
-                SetVariable(new VariableNode
-                {
-                    Name = _args[i].Name,
-                    Expression = args[i]
-                });
+                SetVariable(new VariableNode(_args[i].Name, args[i]));
             }
         }
 

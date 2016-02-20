@@ -64,9 +64,19 @@ namespace SassSharp.Model.Nodes
             Parent.SetMixin(node);
         }
 
+
         public virtual MixinNode GetMixin(string name)
         {
             return Parent.GetMixin(name);
+        }
+        public virtual void SetFunction(FunctionNode node)
+        {
+            Parent.SetFunction(node);
+        }
+
+        public virtual FunctionNode GetFunction(string name)
+        {
+            return Parent.GetFunction(name);
         }
     }
 }

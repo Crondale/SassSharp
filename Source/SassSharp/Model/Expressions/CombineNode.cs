@@ -36,6 +36,12 @@ namespace SassSharp.Model.Expressions
                     return a - b;
                 case '/':
                     return a/b;
+                case '=':
+                    return ValueNode.ValueEquals(a, b);
+                case '<':
+                    return a < b;
+                case '>':
+                    return a > b;
             }
 
             throw new Exception($"Invalid operator: {CombineOperator}");
@@ -43,7 +49,7 @@ namespace SassSharp.Model.Expressions
 
         public override string Value
         {
-            get { return $"{A.Value} {Operator} {B.Value}"; }
+            get { return $"{A.Value} {CombineOperator} {B.Value}"; }
         }
     }
 }

@@ -44,8 +44,11 @@ namespace SassSharp.Model.Expressions
                 }
             }
 
+            var function = scope.GetFunction(Name);
 
-            throw new NotImplementedException();
+            ExpressionNode result = function.Execute(args);
+
+            return result;
         }
 
         public override string Value

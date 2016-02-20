@@ -116,6 +116,8 @@ namespace SassSharp
         internal ScssPackage ReadTree()
         {
             var package = new ScssPackage(File);
+            package.LoadBuiltInFunctions();
+
             ScopeNode currentScope = package;
             ReadScopeContent(currentScope);
 
@@ -194,7 +196,6 @@ namespace SassSharp
                             {
                                 throw new Exception("Unexpected ;");
                             }
-                            break;
                         case ':':
                             char pc = (char) Peek();
                             if (char.IsLetter(pc))//hover etc.
@@ -207,9 +208,9 @@ namespace SassSharp
 
                                 if (buffer[0] == '$')
                                 {
-                                    var node = new VariableNode();
-                                    node.Name = buffer.ToString().Trim().TrimStart('$');
-                                    node.Expression = new Expression(expr);
+                                    var node = new VariableNode(
+                                        buffer.ToString().Trim().TrimStart('$'),
+                                        new Expression(expr));
                                     buffer.Clear();
                                     currentScope.Add(node);
                                     
@@ -306,6 +307,9 @@ namespace SassSharp
                 case "function":
                     ReadFunction(currentScope);
                     break;
+                case "return":
+                    ReadReturn(currentScope);
+                    break;
                 default:
                     throw new Exception($"Could not recognize @{type}");
             }
@@ -356,6 +360,15 @@ namespace SassSharp
 
         }
 
+        private void ReadReturn(ScopeNode currentScope)
+        {
+            ExpressionNode value = ReadValue(false);
+            Expect(';');
+            var result = new ReturnNode(new Expression(value));
+            currentScope.Add(result);
+
+        }
+
         private IEnumerable<Expression> ReadArgumentCall()
         {
             var result = new List<Expression>();
@@ -395,8 +408,7 @@ namespace SassSharp
                     case '$':
                         string name = ReadName();
 
-                        var node = new VariableNode();
-                        node.Name = name;
+                        var node = new VariableNode(name);
                         result.Add(node);
 
                         SkipWhitespace();
@@ -459,6 +471,7 @@ namespace SassSharp
             List<ExpressionNode> tempNodes = new List<ExpressionNode>();
             var buffer = new StringBuilder();
             bool afterSpace = false;
+            bool afterOperator = false;
             char op = '+';
             string key = null;
             bool inDoubleQuotes = false;
@@ -505,12 +518,12 @@ namespace SassSharp
                     switch (c)
                     {
                         case ',':
-                            if (buffer.Length != 0)
+                            if (!afterOperator)
                                 afterSpace = true;
                             result.PreferComma = true;
                             break;
                         case ' ':
-                            if (buffer.Length != 0)
+                            if (!afterOperator)
                                 afterSpace = true;
                             break;
                         case '(':
@@ -532,6 +545,9 @@ namespace SassSharp
                         case '+':
                         case '*':
                         case '/':
+                        case '<':
+                        case '>':
+                        case '=':
                             if (c == '-' && !afterSpace)
                                 goto default;
 
@@ -543,6 +559,7 @@ namespace SassSharp
                             op = c;
 
                             afterSpace = false;
+                            afterOperator = true;
                             break;
                         case '\n':
                             break;
@@ -556,16 +573,25 @@ namespace SassSharp
                         default:
                             if (afterSpace)
                             {
-                                tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
-                                op = ' ';
-                                buffer.Clear();
-                                afterSpace = false;
+                                if (buffer.Length != 0)
+                                {
+                                    tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                                    op = ' ';
+                                    buffer.Clear();
+                                }
 
-                                result.Add(key, Expression.CalculateTree(tempNodes.ToArray()));
-                                tempNodes.Clear();
+                                if (tempNodes.Count > 0)
+                                {
+                                    result.Add(key, Expression.CalculateTree(tempNodes.ToArray()));
+                                    tempNodes.Clear();
+                                }
+
+                                afterSpace = false;
                                 key = null;
                             }
                             buffer.Append(c);
+                            afterSpace = false;
+                            afterOperator = false;
                             break;
                     }
 

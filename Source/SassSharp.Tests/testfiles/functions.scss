@@ -1,6 +1,6 @@
 ﻿@function test-func($type, $i:0) {
   $n: $i + 1;
-  @return if($n < 3, $type 1px , $type 0);
+  @return if($n < 3, 1px , 2px);
 }
 
 

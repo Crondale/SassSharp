@@ -58,11 +58,13 @@
     <Compile Include="Model\Expressions\ReferenceNode.cs" />
     <Compile Include="Model\Expressions\ValueNode.cs" />
     <Compile Include="Model\Nodes\CommentNode.cs" />
+    <Compile Include="Model\Nodes\Functions\IfFunction.cs" />
     <Compile Include="Model\Nodes\ImportNode.cs" />
     <Compile Include="Model\Nodes\IncludeNode.cs" />
     <Compile Include="Model\Nodes\FunctionNode.cs" />
     <Compile Include="Model\Nodes\MixinNode.cs" />
     <Compile Include="Model\Nodes\NamespaceNode.cs" />
+    <Compile Include="Model\Nodes\ReturnNode.cs" />
     <Compile Include="Model\Nodes\ScopeNode.cs" />
     <Compile Include="Model\Nodes\PropertyNode.cs" />
     <Compile Include="Model\ScssPackage.cs" />

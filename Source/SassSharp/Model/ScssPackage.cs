@@ -2,16 +2,24 @@
 using System.Collections.Generic;
 using SassSharp.IO;
 using SassSharp.Model.Nodes;
+using SassSharp.Model.Nodes.Functions;
 
 namespace SassSharp.Model
 {
     internal class ScssPackage : ScopeNode
     {
         private readonly Dictionary<string, MixinNode> _mixins = new Dictionary<string, MixinNode>();
+        private readonly Dictionary<string, FunctionNode> _functions = new Dictionary<string, FunctionNode>();
 
         public ScssPackage(PathFile file)
         {
             File = file;
+            
+        }
+
+        public void LoadBuiltInFunctions()
+        {
+            this.SetFunction(new IfFunction());
         }
 
         public PathFile File { get; set; }
@@ -47,6 +55,22 @@ namespace SassSharp.Model
 
             if (!_mixins.TryGetValue(name, out result))
                 throw new Exception($"Could not find variable: {name}");
+
+
+            return result;
+        }
+
+        public override void SetFunction(FunctionNode node)
+        {
+            _functions[node.Name] = node;
+        }
+
+        public override FunctionNode GetFunction(string name)
+        {
+            FunctionNode result = null;
+
+            if (!_functions.TryGetValue(name, out result))
+                throw new Exception($"Could not find function: {name}");
 
 
             return result;

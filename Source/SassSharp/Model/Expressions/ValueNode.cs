@@ -99,13 +99,28 @@ namespace SassSharp.Model.Expressions
             return checkAndCalculate(x, y, (a, b) => a/b);
         }
 
+        public static ValueNode operator <(ValueNode x, ValueNode y)
+        {
+            return checkAndCalculate(x, y, (a, b) => a < b ? 1 : 0);
+        }
+
+        public static ValueNode operator >(ValueNode x, ValueNode y)
+        {
+            return checkAndCalculate(x, y, (a, b) => a > b ? 1 : 0);
+        }
+
+        public static ValueNode ValueEquals(ValueNode x, ValueNode y)
+        {
+            return checkAndCalculate(x, y, (a, b) => a == b ? 1 : 0);
+        }
+
         private static ValueNode checkAndCalculate(ValueNode x, ValueNode y, Func<double, double, double> calculation)
         {
             if (x._type == ValueNodeType.Text)
-                throw new Exception("Cannot multiply texts");
+                throw new Exception("Cannot calculate on texts");
 
             if (y._type == ValueNodeType.Text)
-                throw new Exception("Cannot multiply texts");
+                throw new Exception("Cannot calculate on texts");
 
             if (x._type == ValueNodeType.Value)
             {

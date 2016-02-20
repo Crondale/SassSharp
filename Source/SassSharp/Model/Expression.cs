@@ -57,14 +57,20 @@ namespace SassSharp.Model
         {
             switch (op)
             {
-                case '+':
+                case '=':
                     return 1;
-                case '-':
+                case '<':
                     return 2;
-                case '*':
+                case '>':
                     return 3;
+                case '+':
+                    return 11;
+                case '-':
+                    return 12;
+                case '*':
+                    return 13;
                 case '/':
-                    return 4;
+                    return 14;
             }
 
             throw new Exception($"Unexpected operator: {op}");

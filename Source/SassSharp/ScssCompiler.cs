@@ -136,6 +136,12 @@ namespace SassSharp
 
                     scope.SetMixin(n);
                 }
+                else if (node is FunctionNode)
+                {
+                    var n = (FunctionNode)node;
+
+                    scope.SetFunction(n);
+                }
                 else if (node is NamespaceNode)
                 {
                     var subLevel = level;
