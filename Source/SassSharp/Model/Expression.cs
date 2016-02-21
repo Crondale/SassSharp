@@ -19,8 +19,78 @@ namespace SassSharp.Model
             get { return Root == null; }
         }
 
+        public static ValueList CalculateList(ExpressionNode[] nodes)
+        {
+            if(nodes.Length == 0)
+                return new ValueList();
+            
+            for (var i = 1; i < nodes.Length; i++)
+            {
+                var filter = nodes[i];
+
+                if (filter.Operator == ',')
+                    return CalculateCommaList(nodes);
+            }
+
+            for (var i = 1; i < nodes.Length; i++)
+            {
+                var filter = nodes[i];
+
+                if (filter.Operator == ' ')
+                    return CalculateSpaceList(nodes);
+            }
+
+            return new ValueList(CalculateTree(nodes));
+        }
+
+        private static ValueList CalculateCommaList(ExpressionNode[] nodes)
+        {
+            ValueList result = new ValueList();
+            result.PreferComma = true;
+            var skip = 0;
+            for (var i = 1; i < nodes.Length; i++)
+            {
+                var filter = nodes[i];
+
+                if (filter.Operator == ',')
+                {
+                    result.Add(CalculateList(nodes.Skip(skip).Take(i - skip).ToArray()));
+                    skip = i;
+                }
+                    
+            }
+
+            result.Add(CalculateList(nodes.Skip(skip).ToArray()));
+
+            return result;
+        }
+
+        private static ValueList CalculateSpaceList(ExpressionNode[] nodes)
+        {
+            ValueList result = new ValueList();
+            var skip = 0;
+            for (var i = 1; i < nodes.Length; i++)
+            {
+                var filter = nodes[i];
+
+                if (filter.Operator == ' ')
+                {
+                    var a = CalculateList(nodes.Skip(skip).Take(i - skip).ToArray());
+                    result.Add(a);
+                    skip = i;
+                }
+            }
+
+            result.Add(CalculateList(nodes.Skip(skip).ToArray()));
+
+            return result;
+        }
+
         public static ExpressionNode CalculateTree(ExpressionNode[] nodes)
         {
+            if (nodes.Length == 0)
+                throw new ArgumentException("Cannot be empty");
+
             if (nodes.Length == 1) return nodes[0];
 
             if (nodes.Length == 2) return new CombineNode(nodes[0], nodes[1], nodes[1].Operator);

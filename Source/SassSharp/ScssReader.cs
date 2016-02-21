@@ -163,6 +163,13 @@ namespace SassSharp
                             ReadAt(currentScope);
 
                             break;
+                        case '$':
+                            string name = ReadUntil(':');
+                            VariableNode vn = new VariableNode(name);
+                            vn.Expression = new Expression(ReadValueList());
+                            Expect(';');
+                            currentScope.Add(vn);
+                            break;
                         case '/':
                             if (inCommentStart)
                             {
@@ -204,6 +211,29 @@ namespace SassSharp
                             }
                             else
                             {
+                                var pn = new PropertyNode();
+                                pn.Name = buffer.ToString().Trim();
+                                pn.Expression = new Expression(ReadValueList());
+                                buffer.Clear();
+
+                                char pc2 = (char)Read();
+                                if (pc2 == ';')
+                                {
+                                    currentScope.Add(pn);
+                                }
+                                else if (pc2 == '{')
+                                {
+                                    var result = new NamespaceNode(pn);
+                                    ReadScopeContent(result);
+                                    currentScope.Add(result);
+
+                                }
+                                else
+                                {
+                                    throw new Exception("Expected { or ;");
+                                }
+
+                                /*
                                 var expr = ReadValue(false);
 
                                 if (buffer[0] == '$')
@@ -239,7 +269,7 @@ namespace SassSharp
                                     {
                                         throw new Exception("Expected { or ;");
                                     }
-                                }
+                                }*/
                             }
                             break;
                         case '"':
@@ -464,9 +494,116 @@ namespace SassSharp
             return buffer.ToString();
         }
 
+        private ValueList ReadValueList()
+        {
+            List<ExpressionNode> tempNodes = new List<ExpressionNode>();
+            char op = '+';
+
+            while (!EndOfStream)
+            {
+                bool afterSpace = SkipWhitespace();
+                char c = (char) Peek();
+                
+                switch (c)
+                {
+                    case ')':
+                        //Read(); // To consume or not consume
+                        return Expression.CalculateList(tempNodes.ToArray());
+                    case '{':
+                    case ';':
+                        //Read(); // To consume or not consume
+                        return Expression.CalculateList(tempNodes.ToArray());
+                    case ',':
+                    case '-':
+                    case '+':
+                    case '*':
+                    case '/':
+                    case '<':
+                    case '>':
+                    case '=':
+                        op = c;
+                        Read();
+                        break;
+                    default:
+                        op = ' ';
+                        break;
+                }
+
+                SkipWhitespace();
+
+                c = (char)Peek();
+
+                //Expect expression node
+                ExpressionNode expressionNode = null;
+                
+                switch (c)
+                {
+                    case '(':
+                        Read();
+                        expressionNode = ReadValueList();
+                        Expect(')');
+                        break;
+                    case ')': // This only happens with: ",)"
+                        return Expression.CalculateList(tempNodes.ToArray());
+                    case '$':
+                        Read();
+                        string name = ReadName();
+                        expressionNode = new ReferenceNode(name);
+                        break;
+                    default:
+                        expressionNode = ReadValue();
+                        break;
+                }
+
+                expressionNode.Operator = op;
+                tempNodes.Add(expressionNode);
+            }
+
+            throw new Exception("Could not find end of expression");
+        }
+
+        private ExpressionNode ReadValue()
+        {
+            StringBuilder sb = new StringBuilder();
+            
+            while (!EndOfStream)
+            {
+                char c = (char) Peek();
+
+                switch (c)
+                {
+                    case '(':
+                        return new FunctionCallNode(sb.ToString(), ReadValueList());
+                    case ' ':
+                    case ')':
+                    case '{':
+                    case ';':
+                    case ',':
+                    case '+':
+                    case '*':
+                    case '/':
+                    case '<':
+                    case '>':
+                    case '=':
+                        return new ValueNode(sb.ToString());
+                    //Will - come into play?  Maybe in eg: 10-1
+                    //TODO fix this
+                    /*case '-':
+                        return new ValueNode(sb.ToString());*/
+                    default:
+                        Read();
+                        sb.Append(c);
+                        break;
+                }
+            }
+
+            throw new Exception();
+        }
 
         private ValueList ReadValue(bool returnOnComma)
         {
+            throw new Exception("Not in use anymore");
+
             ValueList result = new ValueList();
             List<ExpressionNode> tempNodes = new List<ExpressionNode>();
             var buffer = new StringBuilder();
