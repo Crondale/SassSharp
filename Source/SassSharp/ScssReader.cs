@@ -643,6 +643,10 @@ namespace SassSharp
 
                 switch (c)
                 {
+                    case '\'':
+                    case '"':
+                        ReadString(sb);
+                        break;
                     case '(':
                         Read();
                         var n = ReadValueList(')');
@@ -682,6 +686,25 @@ namespace SassSharp
             }
 
             throw new Exception();
+        }
+
+        private void ReadString(StringBuilder buffer)
+        {
+            char quote = (char)Read();
+            bool escape = false;
+            while (!EndOfStream)
+            {
+                char c = (char) Read();
+                buffer.Append(c);
+
+                if(!escape && c == quote)
+                    return;
+
+                escape = false;
+
+                if (c == '\\')
+                    escape = true;
+            }
         }
 
         private ValueList ReadValue(bool returnOnComma)
