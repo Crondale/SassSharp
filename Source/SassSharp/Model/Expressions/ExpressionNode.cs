@@ -20,5 +20,11 @@ namespace SassSharp.Model.Expressions
         {
             return v.Value;
         }
+
+
+        public override string ToString()
+        {
+            return Value;
+        }
     }
 }

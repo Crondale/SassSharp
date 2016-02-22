@@ -38,6 +38,11 @@ namespace SassSharp.Model.Expressions
             if (value == "")
                 throw new ArgumentException("Can't be empty");
 
+            if (value == "true")
+            {
+                value = "1";
+            }
+
             //TODO move to reader
             var m = Regex.Match(value, "^(?<value>[0-9.]+)(?<unit>[a-z%]*)$");
 
@@ -111,7 +116,7 @@ namespace SassSharp.Model.Expressions
 
         public static ValueNode ValueEquals(ValueNode x, ValueNode y)
         {
-            return checkAndCalculate(x, y, (a, b) => a == b ? 1 : 0);
+            return x.Value == y.Value ? new ValueNode("1") : new ValueNode("0");
         }
 
         private static ValueNode checkAndCalculate(ValueNode x, ValueNode y, Func<double, double, double> calculation)

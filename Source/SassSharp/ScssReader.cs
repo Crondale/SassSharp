@@ -340,10 +340,60 @@ namespace SassSharp
                 case "return":
                     ReadReturn(currentScope);
                     break;
+                case "if":
+                    ReadIf(currentScope);
+                    break;
+                case "else":
+                    ReadElse(currentScope);
+                    break;
                 default:
                     throw new Exception($"Could not recognize @{type}");
             }
         }
+
+
+        private void ReadIf(ScopeNode currentScope)
+        {
+            var val = ReadValueList('{');
+            Expect('{');
+
+            var ifNode = new IfNode(val);
+            currentScope.Add(ifNode);
+
+            ReadScopeContent(ifNode);
+            
+        }
+
+        private void ReadElse(ScopeNode currentScope)
+        {
+            ElseNode elseNode;
+
+            if (Peek() == 'i') //Assume if
+            {
+                Read();
+                Expect('f');
+                SkipWhitespace();
+
+                var val = ReadValueList('{');
+                Expect('{');
+
+                elseNode = new ElseNode(val);
+            }
+            else
+            {
+                elseNode = new ElseNode();
+            }
+
+            var parentIf = currentScope.Nodes.Last() as IfNode;
+
+            if (parentIf == null)
+                throw new Exception("Else without if");
+
+            parentIf.Elses.Add(elseNode);
+
+            ReadScopeContent(elseNode);
+        }
+
 
         private void ReadImport(ScopeNode currentScope)
         {
@@ -532,13 +582,46 @@ namespace SassSharp
                     {
                         throw new Exception("Unexpected end character");
                     }
+                    case '!':
+                        Read();
+                        c = (char)Peek();
+                        if (c == '=')
+                        {
+                            op = '!';
+                            Read();
+                            break;
+                        }
+                        else
+                        {
+                            string name = ReadName();
+
+                            if (spaceList == null)
+                            {
+                                spaceList = new ValueList();
+                            }
+
+                            spaceList.Add(Expression.CalculateTree(tempNodes.ToArray()));
+                            tempNodes.Clear();
+
+                            //Make a special modifierNode?
+                            tempNodes.Add(new ValueNode($"!{name}")
+                            {
+                                Operator = '+'
+                            });
+                            
+                            continue;
+                        }
+                    case '=':
+                        op = c;
+                        Read();
+                        Expect('=');
+                        break;
                     case '-':
                     case '+':
                     case '*':
                     case '/':
                     case '<':
                     case '>':
-                    case '=':
                         op = c;
                         Read();
                         break;

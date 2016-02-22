@@ -59,9 +59,11 @@
     <Compile Include="Model\Expressions\ValueNode.cs" />
     <Compile Include="Model\Nodes\CommentNode.cs" />
     <Compile Include="Model\Nodes\Functions\IfFunction.cs" />
+    <Compile Include="Model\Nodes\ElseNode.cs" />
     <Compile Include="Model\Nodes\ImportNode.cs" />
     <Compile Include="Model\Nodes\IncludeNode.cs" />
     <Compile Include="Model\Nodes\FunctionNode.cs" />
+    <Compile Include="Model\Nodes\IfNode.cs" />
     <Compile Include="Model\Nodes\MixinNode.cs" />
     <Compile Include="Model\Nodes\NamespaceNode.cs" />
     <Compile Include="Model\Nodes\ReturnNode.cs" />

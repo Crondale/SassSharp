@@ -136,6 +136,14 @@ namespace SassSharp
 
                     scope.SetMixin(n);
                 }
+                else if (node is IfNode)
+                {
+                    var n = (IfNode)node;
+                    var sn = n.GetActiveScope(scope);
+
+                    if(sn != null)
+                        ProcessScope(package, sn, sheet, selector, level, nspace);
+                }
                 else if (node is FunctionNode)
                 {
                     var n = (FunctionNode)node;

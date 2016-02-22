@@ -37,6 +37,7 @@ namespace SassSharp.Model
 
             Add(null, value);
         }
+
         public void Add(string key, ExpressionNode value)
         {
             if (key != null)
@@ -108,5 +109,6 @@ namespace SassSharp.Model
         {
             _items.RemoveAt(i);
         }
+
     }
 }
