@@ -16,7 +16,7 @@ namespace SassSharp.Model
 
         public bool Empty
         {
-            get { return Root == null; }
+            get { return Root == null || (Root is ValueList && ((ValueList)Root).Count == 0); }
         }
 
         public static ValueList CalculateList(ExpressionNode[] nodes)
@@ -89,7 +89,7 @@ namespace SassSharp.Model
         public static ExpressionNode CalculateTree(ExpressionNode[] nodes)
         {
             if (nodes.Length == 0)
-                throw new ArgumentException("Cannot be empty");
+                return null;
 
             if (nodes.Length == 1) return nodes[0];
 

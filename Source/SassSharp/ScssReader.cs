@@ -166,7 +166,7 @@ namespace SassSharp
                         case '$':
                             string name = ReadUntil(':');
                             VariableNode vn = new VariableNode(name);
-                            vn.Expression = new Expression(ReadValueList());
+                            vn.Expression = new Expression(ReadValueList(';'));
                             Expect(';');
                             currentScope.Add(vn);
                             break;
@@ -213,7 +213,7 @@ namespace SassSharp
                             {
                                 var pn = new PropertyNode();
                                 pn.Name = buffer.ToString().Trim();
-                                pn.Expression = new Expression(ReadValueList());
+                                pn.Expression = new Expression(ReadValueList(';', '{'));
                                 buffer.Clear();
 
                                 char pc2 = (char)Read();
@@ -373,7 +373,7 @@ namespace SassSharp
             var args = ReadArgumentCall();
             Expect(';');
 
-            var result = new IncludeNode(name, args.ToArray());
+            var result = new IncludeNode(name, args);
             currentScope.Add(result);
         }
 
@@ -392,35 +392,21 @@ namespace SassSharp
 
         private void ReadReturn(ScopeNode currentScope)
         {
-            ExpressionNode value = ReadValue(false);
+            ExpressionNode value = ReadValueList(';');
             Expect(';');
             var result = new ReturnNode(new Expression(value));
             currentScope.Add(result);
 
         }
 
-        private IEnumerable<Expression> ReadArgumentCall()
+        private ValueList ReadArgumentCall()
         {
-            var result = new List<Expression>();
 
             Expect('(');
-            
-            while (!EndOfStream)
-            {
-                SkipWhitespace();
-                char c = (char)Peek();
+            var result = ReadValueList(')');
+            Expect(')');
+            return result;
 
-                if (c == ')')
-                {
-                    Read();
-                    return result;
-                }
-
-                Expression expr = new Expression(ReadValue(true));
-                result.Add(expr);
-            }
-
-            throw new Exception("Could not find argument ending");
         }
 
         private IEnumerable<VariableNode> ReadArgumentDefinition()
@@ -446,7 +432,7 @@ namespace SassSharp
                         if (c == ':')
                         {
                             Read();
-                            node.Expression = new Expression(ReadValue(true));
+                            node.Expression = new Expression(ReadValueList(',', ')'));
                         }
                         
                         break;
@@ -494,8 +480,12 @@ namespace SassSharp
             return buffer.ToString();
         }
 
-        private ValueList ReadValueList()
+        private ValueList ReadValueList(params char[] expectedEndCharaters)
         {
+            ValueList commaList = null;
+            ValueList spaceList = null;
+            string key = null;
+            
             List<ExpressionNode> tempNodes = new List<ExpressionNode>();
             char op = '+';
 
@@ -503,17 +493,45 @@ namespace SassSharp
             {
                 bool afterSpace = SkipWhitespace();
                 char c = (char) Peek();
+
+                if (expectedEndCharaters.Contains(c))
+                {
+                    var node = Expression.CalculateTree(tempNodes.ToArray());
+
+                    if (commaList != null)
+                    {
+                        if (spaceList != null)
+                        {
+                            spaceList.Add(node);
+                            commaList.Add(spaceList);
+                            spaceList = null;
+                        }
+                        else
+                        {
+                            commaList.Add(node);
+                        }
+
+                        return commaList;
+                    }
+                    else
+                    {
+                        if (spaceList == null)
+                        {
+                            spaceList = new ValueList();
+                        }
+                        spaceList.Add(node);
+                        return spaceList;
+                    }
+                }
                 
                 switch (c)
                 {
                     case ')':
-                        //Read(); // To consume or not consume
-                        return Expression.CalculateList(tempNodes.ToArray());
                     case '{':
                     case ';':
-                        //Read(); // To consume or not consume
-                        return Expression.CalculateList(tempNodes.ToArray());
-                    case ',':
+                    {
+                        throw new Exception("Unexpected end character");
+                    }
                     case '-':
                     case '+':
                     case '*':
@@ -524,8 +542,51 @@ namespace SassSharp
                         op = c;
                         Read();
                         break;
+                    case ',':
+                    {
+                        Read();
+
+                        if (commaList == null)
+                        {
+                            commaList = new ValueList();
+                            commaList.PreferComma = true;
+                        }
+
+                        var node = Expression.CalculateTree(tempNodes.ToArray());
+                        tempNodes.Clear();
+
+                        if (spaceList != null)
+                        {
+                            spaceList.Add(node);
+                            commaList.Add(spaceList);
+                            spaceList = null;
+                        }
+                        else
+                        {
+                            if (key != null)
+                            {
+                                commaList.Add(key, node);
+                                key = null;
+                            }
+                            else
+                            {
+                                commaList.Add(node);
+                            }
+                            
+                        }
+                    }
+                        break;
                     default:
-                        op = ' ';
+                        if (afterSpace)
+                        {
+                            if (spaceList == null)
+                            {
+                                spaceList = new ValueList();
+                            }
+
+                            spaceList.Add(Expression.CalculateTree(tempNodes.ToArray()));
+                            tempNodes.Clear();
+                        }
                         break;
                 }
 
@@ -540,18 +601,27 @@ namespace SassSharp
                 {
                     case '(':
                         Read();
-                        expressionNode = ReadValueList();
+                        expressionNode = ReadValueList(')');
                         Expect(')');
                         break;
                     case ')': // This only happens with: ",)"
-                        return Expression.CalculateList(tempNodes.ToArray());
+                        continue;
                     case '$':
                         Read();
                         string name = ReadName();
                         expressionNode = new ReferenceNode(name);
                         break;
                     default:
-                        expressionNode = ReadValue();
+                        var val = ReadValueListItem();
+                        expressionNode = val.Value;
+
+                        if (val.Key != null)
+                        {
+                            if(tempNodes.Count > 0)
+                                throw new Exception("Unexpected key");
+
+                            key = val.Key;
+                        }
                         break;
                 }
 
@@ -562,9 +632,10 @@ namespace SassSharp
             throw new Exception("Could not find end of expression");
         }
 
-        private ExpressionNode ReadValue()
+        private KeyValuePair<string, ExpressionNode> ReadValueListItem()
         {
             StringBuilder sb = new StringBuilder();
+            string key = null;
             
             while (!EndOfStream)
             {
@@ -573,7 +644,18 @@ namespace SassSharp
                 switch (c)
                 {
                     case '(':
-                        return new FunctionCallNode(sb.ToString(), ReadValueList());
+                        Read();
+                        var n = ReadValueList(')');
+                        Expect(')');
+                        return new KeyValuePair<string, ExpressionNode>(
+                            key,
+                            new FunctionCallNode(sb.ToString(), n));
+                    case ':':
+                        Read();
+                        key = sb.ToString().Trim('\"');
+                        sb.Clear();
+                        SkipWhitespace();
+                        break;
                     case ' ':
                     case ')':
                     case '{':
@@ -585,7 +667,9 @@ namespace SassSharp
                     case '<':
                     case '>':
                     case '=':
-                        return new ValueNode(sb.ToString());
+                        return new KeyValuePair<string, ExpressionNode>(
+                            key,
+                            new ValueNode(sb.ToString()));
                     //Will - come into play?  Maybe in eg: 10-1
                     //TODO fix this
                     /*case '-':

@@ -13,9 +13,9 @@
 
         public string Name { get; set; }
 
-        public void Initialize(Expression[] args)
+        public void Initialize(ValueList args)
         {
-            for (var i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Count; i++)
             {
                 SetVariable(new VariableNode(_args[i].Name, args[i]));
             }

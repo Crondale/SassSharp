@@ -32,6 +32,9 @@ namespace SassSharp.Model
 
         public void Add(ExpressionNode value)
         {
+            if(value == null)
+                return;
+
             Add(null, value);
         }
         public void Add(string key, ExpressionNode value)
