@@ -14,12 +14,14 @@ namespace SassSharp
     {
         private int _lineNumber;
 
+
         public ScssReader(PathFile file) : base(file.GetStream())
         {
             File = file;
         }
 
         public PathFile File { get; set; }
+
 
         public override int Peek()
         {
