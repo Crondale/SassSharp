@@ -1,4 +1,6 @@
-﻿namespace SassSharp.Model.Nodes
+﻿using SassSharp.Model.Expressions;
+
+namespace SassSharp.Model.Nodes
 {
     internal class VariableNode : CodeNode
     {
@@ -9,8 +11,14 @@
             Expression = expression;
         }
 
+        public VariableNode(string name, ExpressionNode expression)
+        {
+            Name = name;
+            Expression = new Expression(expression);
+        }
+
         public VariableNode(string name)
-            :this(name, null)
+            :this(name, (ExpressionNode) null)
         {
         }
 
