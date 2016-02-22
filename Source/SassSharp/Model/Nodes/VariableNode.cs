@@ -6,8 +6,6 @@ namespace SassSharp.Model.Nodes
     {
         private Expression _expression;
 
-        public bool Default { get; set; }
-
         public VariableNode(string name, Expression expression)
         {
             Name = name;
@@ -21,9 +19,11 @@ namespace SassSharp.Model.Nodes
         }
 
         public VariableNode(string name)
-            :this(name, (ExpressionNode) null)
+            : this(name, (ExpressionNode) null)
         {
         }
+
+        public bool Default { get; set; }
 
         public string Name { get; set; }
 

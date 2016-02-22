@@ -16,14 +16,14 @@ namespace SassSharp.Model
 
         public bool Empty
         {
-            get { return Root == null || (Root is ValueList && ((ValueList)Root).Count == 0); }
+            get { return Root == null || (Root is ValueList && ((ValueList) Root).Count == 0); }
         }
 
         public static ValueList CalculateList(ExpressionNode[] nodes)
         {
-            if(nodes.Length == 0)
+            if (nodes.Length == 0)
                 return new ValueList();
-            
+
             for (var i = 1; i < nodes.Length; i++)
             {
                 var filter = nodes[i];
@@ -45,7 +45,7 @@ namespace SassSharp.Model
 
         private static ValueList CalculateCommaList(ExpressionNode[] nodes)
         {
-            ValueList result = new ValueList();
+            var result = new ValueList();
             result.PreferComma = true;
             var skip = 0;
             for (var i = 1; i < nodes.Length; i++)
@@ -57,7 +57,6 @@ namespace SassSharp.Model
                     result.Add(CalculateList(nodes.Skip(skip).Take(i - skip).ToArray()));
                     skip = i;
                 }
-                    
             }
 
             result.Add(CalculateList(nodes.Skip(skip).ToArray()));
@@ -67,7 +66,7 @@ namespace SassSharp.Model
 
         private static ValueList CalculateSpaceList(ExpressionNode[] nodes)
         {
-            ValueList result = new ValueList();
+            var result = new ValueList();
             var skip = 0;
             for (var i = 1; i < nodes.Length; i++)
             {

@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SassSharp.Model.Expressions;
 using SassSharp.Model.Nodes;
 
 namespace SassSharp.Model
 {
-    class ValueList: ExpressionNode
+    internal class ValueList : ExpressionNode
     {
-        private List<ExpressionNode> _items = new List<ExpressionNode>();
+        private readonly List<ExpressionNode> _items = new List<ExpressionNode>();
         private Dictionary<string, int> _keys = new Dictionary<string, int>();
 
 
@@ -30,55 +27,12 @@ namespace SassSharp.Model
 
         public bool PreferComma { get; set; }
 
-        public void Add(ExpressionNode value)
-        {
-            if(value == null)
-                return;
-
-            Add(null, value);
-        }
-
-        public void Add(string key, ExpressionNode value)
-        {
-            if (key != null)
-            {
-                _keys[key] = _items.Count;
-            }
-
-            _items.Add(value);
-            
-        }
-        
-
-        public override ExpressionNode Resolve(ScopeNode scope)
-        {
-            if (Count == 1)
-                return _items[0].Resolve(scope);
-
-            ValueList valueList = new ValueList();
-            valueList.PreferComma = PreferComma;
-
-            foreach (var expressionNode in _items)
-            {
-                valueList.Add(expressionNode.Resolve(scope));
-            }
-
-            valueList.SetKeys(_keys);
-
-            return valueList;
-        }
-
-        private void SetKeys(Dictionary<string, int> keys)
-        {
-            _keys = keys;
-        }
-
         public override string Value
         {
             get
             {
-                string seperator = PreferComma ? ", " : " ";
-                return String.Join(seperator, _items.Select(x => x.Value));
+                var seperator = PreferComma ? ", " : " ";
+                return string.Join(seperator, _items.Select(x => x.Value));
             }
         }
 
@@ -97,7 +51,49 @@ namespace SassSharp.Model
             }
         }
 
-        public static ValueList From(ExpressionNode node)  // explicit byte to digit conversion operator
+        public void Add(ExpressionNode value)
+        {
+            if (value == null)
+                return;
+
+            Add(null, value);
+        }
+
+        public void Add(string key, ExpressionNode value)
+        {
+            if (key != null)
+            {
+                _keys[key] = _items.Count;
+            }
+
+            _items.Add(value);
+        }
+
+
+        public override ExpressionNode Resolve(ScopeNode scope)
+        {
+            if (Count == 1)
+                return _items[0].Resolve(scope);
+
+            var valueList = new ValueList();
+            valueList.PreferComma = PreferComma;
+
+            foreach (var expressionNode in _items)
+            {
+                valueList.Add(expressionNode.Resolve(scope));
+            }
+
+            valueList.SetKeys(_keys);
+
+            return valueList;
+        }
+
+        private void SetKeys(Dictionary<string, int> keys)
+        {
+            _keys = keys;
+        }
+
+        public static ValueList From(ExpressionNode node) // explicit byte to digit conversion operator
         {
             if (node is ValueList)
                 return node as ValueList;
@@ -109,6 +105,5 @@ namespace SassSharp.Model
         {
             _items.RemoveAt(i);
         }
-
     }
 }

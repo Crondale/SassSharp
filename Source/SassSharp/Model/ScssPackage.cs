@@ -8,27 +8,26 @@ namespace SassSharp.Model
 {
     internal class ScssPackage : ScopeNode
     {
-        private readonly Dictionary<string, MixinNode> _mixins = new Dictionary<string, MixinNode>();
         private readonly Dictionary<string, FunctionNode> _functions = new Dictionary<string, FunctionNode>();
+        private readonly Dictionary<string, MixinNode> _mixins = new Dictionary<string, MixinNode>();
 
         public ScssPackage(PathFile file)
         {
             File = file;
-            
-        }
-
-        public void LoadBuiltInFunctions()
-        {
-            this.SetFunction(new IfFunction());
         }
 
         public PathFile File { get; set; }
+
+        public void LoadBuiltInFunctions()
+        {
+            SetFunction(new IfFunction());
+        }
 
         public override void SetVariable(VariableNode node)
         {
             if (node.Default)
             {
-                if(HasVariable(node.Name))
+                if (HasVariable(node.Name))
                     return;
             }
 

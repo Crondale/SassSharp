@@ -69,6 +69,7 @@ namespace SassSharp.Model.Nodes
         {
             return Parent.GetMixin(name);
         }
+
         public virtual void SetFunction(FunctionNode node)
         {
             Parent.SetFunction(node);

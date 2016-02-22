@@ -32,7 +32,7 @@ namespace SassSharp
                 {
                     WriteComment((CssComment) node);
                 }
-                else if(node is CssImport)
+                else if (node is CssImport)
                 {
                     WriteImport((CssImport) node);
                 }

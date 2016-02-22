@@ -36,7 +36,7 @@ namespace SassSharp.Model.Nodes
 
         public virtual ExpressionNode Execute(ValueList args)
         {
-            for (int i = 0; i < args.Count; i++)
+            for (var i = 0; i < args.Count; i++)
             {
                 SetVariable(new VariableNode(_args[i].Name, new Expression(args[i])));
             }
@@ -51,7 +51,7 @@ namespace SassSharp.Model.Nodes
                 }
                 else if (codeNode is ReturnNode)
                 {
-                    return ((ReturnNode)codeNode).Expression.Resolve(this);
+                    return ((ReturnNode) codeNode).Expression.Resolve(this);
                 }
                 else
                 {

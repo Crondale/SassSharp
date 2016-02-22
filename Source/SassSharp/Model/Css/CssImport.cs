@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SassSharp.Model.Css
+﻿namespace SassSharp.Model.Css
 {
-    class CssImport:CssNode
+    internal class CssImport : CssNode
     {
-        public string Path { get; set; }
-
         public CssImport(string path, int level) : base(level)
         {
             Path = path;
         }
+
+        public string Path { get; set; }
     }
 }

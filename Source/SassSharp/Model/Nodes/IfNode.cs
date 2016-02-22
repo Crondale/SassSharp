@@ -7,13 +7,13 @@ namespace SassSharp.Model.Nodes
     {
         private readonly ExpressionNode _condition;
 
-        public List<ElseNode> Elses { get; private set; }
-
         public IfNode(ValueList condition)
         {
             _condition = condition;
             Elses = new List<ElseNode>();
         }
+
+        public List<ElseNode> Elses { get; }
 
         public ScopeNode GetActiveScope(ScopeNode currentScope)
         {

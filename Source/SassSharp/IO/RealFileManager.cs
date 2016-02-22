@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace SassSharp.IO
 {
-    public class RealFileManager:IFileManager
+    public class RealFileManager : IFileManager
     {
-        public string RootPath { get; set; }
-
         public RealFileManager()
         {
             RootPath = Directory.GetCurrentDirectory();
         }
+
+        public string RootPath { get; set; }
 
 
         public Stream GetStream(string path)
@@ -24,7 +19,7 @@ namespace SassSharp.IO
 
         public PathFile GetFile(string path)
         {
-            string fullPath = Path.Combine(RootPath, path);
+            var fullPath = Path.Combine(RootPath, path);
 
             return new PathFile(this, fullPath);
         }

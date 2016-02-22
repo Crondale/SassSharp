@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SassSharp.Model.Expressions;
+﻿using SassSharp.Model.Expressions;
 
 namespace SassSharp.Model.Nodes.Functions
 {
-    class IfFunction:FunctionNode
+    internal class IfFunction : FunctionNode
     {
-        public IfFunction() 
-            : base("if", new VariableNode[]
-        {
-            new VariableNode("test"),
-            new VariableNode("success"),
-            new VariableNode("fail")
-        })
+        public IfFunction()
+            : base("if", new[]
+            {
+                new VariableNode("test"),
+                new VariableNode("success"),
+                new VariableNode("fail")
+            })
         {
         }
 
@@ -25,10 +20,7 @@ namespace SassSharp.Model.Nodes.Functions
             {
                 return args[1];
             }
-            else
-            {
-                return args[2];
-            }
+            return args[2];
         }
     }
 }

@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
-using System.Text.RegularExpressions;
 using SassSharp.IO;
 using SassSharp.Model;
 using SassSharp.Model.Expressions;
@@ -14,21 +12,21 @@ namespace SassSharp
 {
     internal class ScssReader : StreamReader
     {
-        public PathFile File { get; set; }
-
-        private int _lineNumber = 0;
+        private int _lineNumber;
 
         public ScssReader(PathFile file) : base(file.GetStream())
         {
             File = file;
         }
 
+        public PathFile File { get; set; }
+
         public override int Peek()
         {
-            int c = base.Peek();
-            
+            var c = base.Peek();
+
             //Ignore CR
-            while ((char)c == '\r')
+            while ((char) c == '\r')
             {
                 base.Read();
                 c = base.Peek();
@@ -39,31 +37,31 @@ namespace SassSharp
 
         public override int Read()
         {
-            int c = base.Read();
+            var c = base.Read();
 
             //Ignore CR
-            while ((char)c == '\r')
+            while ((char) c == '\r')
             {
                 c = base.Read();
             }
 
-            if ((char)c == '\n')
+            if ((char) c == '\n')
                 ++_lineNumber;
 
             return c;
         }
 
         /// <summary>
-        /// Skips whitespace
+        ///     Skips whitespace
         /// </summary>
         /// <returns>true if whitespace was found</returns>
         private bool SkipWhitespace()
         {
-            bool foundWhitespace = false;
+            var foundWhitespace = false;
 
             while (!EndOfStream)
             {
-                var c = (char)Peek();
+                var c = (char) Peek();
 
                 if (char.IsWhiteSpace(c))
                 {
@@ -80,26 +78,25 @@ namespace SassSharp
         }
 
         /// <summary>
-        /// Reads one character, throwing an exception if not as expected.
+        ///     Reads one character, throwing an exception if not as expected.
         /// </summary>
         /// <param name="c"></param>
         private void Expect(char expected)
         {
             SkipWhitespace();
 
-            if(EndOfStream)
+            if (EndOfStream)
                 throw new Exception($"Expected {expected}, end of stream");
 
-            var c = (char)Read();
+            var c = (char) Read();
 
-            if(c != expected)
+            if (c != expected)
                 throw new Exception($"Expected {expected}, found {c}");
-            
         }
 
         private string ReadUntil(char endChar)
         {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
             while (!EndOfStream)
             {
                 var c = (char) Read();
@@ -135,7 +132,7 @@ namespace SassSharp
 
             while (!EndOfStream)
             {
-                var c = (char)Read();
+                var c = (char) Read();
 
                 if (inDoubleQuotes)
                 {
@@ -148,7 +145,6 @@ namespace SassSharp
                 }
                 else
                 {
-
                     switch (c)
                     {
                         case ' ':
@@ -164,8 +160,8 @@ namespace SassSharp
 
                             break;
                         case '$':
-                            string name = ReadUntil(':');
-                            VariableNode vn = new VariableNode(name);
+                            var name = ReadUntil(':');
+                            var vn = new VariableNode(name);
                             vn.Expression = new Expression(ReadValueList(';'));
                             Expect(';');
                             currentScope.Add(vn);
@@ -179,7 +175,6 @@ namespace SassSharp
 
                                 //Remove the first slash from the buffer
                                 buffer.Length--;
-
                             }
                             else
                             {
@@ -200,12 +195,12 @@ namespace SassSharp
                             }
                             goto default;
                         case ';':
-                            {
-                                throw new Exception("Unexpected ;");
-                            }
+                        {
+                            throw new Exception("Unexpected ;");
+                        }
                         case ':':
-                            char pc = (char) Peek();
-                            if (char.IsLetter(pc))//hover etc.
+                            var pc = (char) Peek();
+                            if (char.IsLetter(pc)) //hover etc.
                             {
                                 buffer.Append(c);
                             }
@@ -216,7 +211,7 @@ namespace SassSharp
                                 pn.Expression = new Expression(ReadValueList(';', '{'));
                                 buffer.Clear();
 
-                                char pc2 = (char)Read();
+                                var pc2 = (char) Read();
                                 if (pc2 == ';')
                                 {
                                     currentScope.Add(pn);
@@ -226,7 +221,6 @@ namespace SassSharp
                                     var result = new NamespaceNode(pn);
                                     ReadScopeContent(result);
                                     currentScope.Add(result);
-
                                 }
                                 else
                                 {
@@ -282,13 +276,13 @@ namespace SassSharp
                             paranthesesLevel--;
                             goto default;
                         case '{':
-                            {
-                                var node = new SelectorNode();
-                                node.Selector = buffer.ToString().Trim();
-                                ReadScopeContent(node);
-                                currentScope.Add(node);
-                                buffer.Clear();
-                            }
+                        {
+                            var node = new SelectorNode();
+                            node.Selector = buffer.ToString().Trim();
+                            ReadScopeContent(node);
+                            currentScope.Add(node);
+                            buffer.Clear();
+                        }
                             break;
                         case '}':
                             return;
@@ -302,24 +296,22 @@ namespace SassSharp
                     }
                 }
             }
-
-            return;
         }
 
         private void ReadAt(ScopeNode currentScope)
         {
-            StringBuilder buffer = new StringBuilder();
+            var buffer = new StringBuilder();
             while (!EndOfStream)
             {
-                char c = (char) Read();
+                var c = (char) Read();
 
-                if(c == ' ')
+                if (c == ' ')
                     break;
 
                 buffer.Append(c);
             }
 
-            String type = buffer.ToString();
+            var type = buffer.ToString();
 
             SkipWhitespace();
 
@@ -361,7 +353,6 @@ namespace SassSharp
             currentScope.Add(ifNode);
 
             ReadScopeContent(ifNode);
-            
         }
 
         private void ReadElse(ScopeNode currentScope)
@@ -397,16 +388,15 @@ namespace SassSharp
 
         private void ReadImport(ScopeNode currentScope)
         {
-            string path = ReadUntil(';');
+            var path = ReadUntil(';');
 
             currentScope.Add(new ImportNode(path));
         }
 
 
-
         private void ReadMixin(ScopeNode currentScope)
         {
-            string name = ReadName();
+            var name = ReadName();
 
             var args = ReadArgumentDefinition();
 
@@ -414,12 +404,11 @@ namespace SassSharp
             Expect('{');
             ReadScopeContent(node);
             currentScope.Add(node);
-
         }
 
         private void ReadInclude(ScopeNode currentScope)
         {
-            string name = ReadName();
+            var name = ReadName();
             var args = ReadArgumentCall();
             Expect(';');
 
@@ -429,7 +418,7 @@ namespace SassSharp
 
         private void ReadFunction(ScopeNode currentScope)
         {
-            string name = ReadName();
+            var name = ReadName();
 
             var args = ReadArgumentDefinition();
 
@@ -437,7 +426,6 @@ namespace SassSharp
             Expect('{');
             ReadScopeContent(node);
             currentScope.Add(node);
-
         }
 
         private void ReadReturn(ScopeNode currentScope)
@@ -446,17 +434,14 @@ namespace SassSharp
             Expect(';');
             var result = new ReturnNode(new Expression(value));
             currentScope.Add(result);
-
         }
 
         private ValueList ReadArgumentCall()
         {
-
             Expect('(');
             var result = ReadValueList(')');
             Expect(')');
             return result;
-
         }
 
         private IEnumerable<VariableNode> ReadArgumentDefinition()
@@ -467,12 +452,12 @@ namespace SassSharp
 
             while (!EndOfStream)
             {
-                char c = (char) Read();
+                var c = (char) Read();
 
                 switch (c)
                 {
                     case '$':
-                        string name = ReadName();
+                        var name = ReadName();
 
                         var node = new VariableNode(name);
                         result.Add(node);
@@ -484,7 +469,7 @@ namespace SassSharp
                             Read();
                             node.Expression = new Expression(ReadValueList(',', ')'));
                         }
-                        
+
                         break;
                     case ',':
                     case ' ':
@@ -501,30 +486,30 @@ namespace SassSharp
 
 
         /// <summary>
-        /// Reads a name, stopping at (, {, ; and whitespace.  Avoids consuming the last character
+        ///     Reads a name, stopping at (, {, ; and whitespace.  Avoids consuming the last character
         /// </summary>
         /// <returns></returns>
         private string ReadName()
         {
-            char firstChar = (char)Peek();
+            var firstChar = (char) Peek();
 
             if (!char.IsLetter(firstChar))
                 throw new Exception("First character in name must be a letter");
 
-            StringBuilder buffer = new StringBuilder();
-            buffer.Append((char)Read());
+            var buffer = new StringBuilder();
+            buffer.Append((char) Read());
 
             while (!EndOfStream)
             {
-                char c = (char)Peek();
+                var c = (char) Peek();
 
                 if (!char.IsLetter(c)
                     && !char.IsDigit(c)
                     && c != '-'
                     && c != '_')
                     break;
-                
-                buffer.Append((char)Read());
+
+                buffer.Append((char) Read());
             }
 
             return buffer.ToString();
@@ -535,14 +520,14 @@ namespace SassSharp
             ValueList commaList = null;
             ValueList spaceList = null;
             string key = null;
-            
-            List<ExpressionNode> tempNodes = new List<ExpressionNode>();
-            char op = '+';
+
+            var tempNodes = new List<ExpressionNode>();
+            var op = '+';
 
             while (!EndOfStream)
             {
-                bool afterSpace = SkipWhitespace();
-                char c = (char) Peek();
+                var afterSpace = SkipWhitespace();
+                var c = (char) Peek();
 
                 if (expectedEndCharaters.Contains(c))
                 {
@@ -563,17 +548,14 @@ namespace SassSharp
 
                         return commaList;
                     }
-                    else
+                    if (spaceList == null)
                     {
-                        if (spaceList == null)
-                        {
-                            spaceList = new ValueList();
-                        }
-                        spaceList.Add(node);
-                        return spaceList;
+                        spaceList = new ValueList();
                     }
+                    spaceList.Add(node);
+                    return spaceList;
                 }
-                
+
                 switch (c)
                 {
                     case ')':
@@ -584,33 +566,30 @@ namespace SassSharp
                     }
                     case '!':
                         Read();
-                        c = (char)Peek();
+                        c = (char) Peek();
                         if (c == '=')
                         {
                             op = '!';
                             Read();
                             break;
                         }
-                        else
+                        var name = ReadName();
+
+                        if (spaceList == null)
                         {
-                            string name = ReadName();
-
-                            if (spaceList == null)
-                            {
-                                spaceList = new ValueList();
-                            }
-
-                            spaceList.Add(Expression.CalculateTree(tempNodes.ToArray()));
-                            tempNodes.Clear();
-
-                            //Make a special modifierNode?
-                            tempNodes.Add(new ValueNode($"!{name}")
-                            {
-                                Operator = '+'
-                            });
-                            
-                            continue;
+                            spaceList = new ValueList();
                         }
+
+                        spaceList.Add(Expression.CalculateTree(tempNodes.ToArray()));
+                        tempNodes.Clear();
+
+                        //Make a special modifierNode?
+                        tempNodes.Add(new ValueNode($"!{name}")
+                        {
+                            Operator = '+'
+                        });
+
+                        continue;
                     case '=':
                         op = c;
                         Read();
@@ -655,7 +634,6 @@ namespace SassSharp
                             {
                                 commaList.Add(node);
                             }
-                            
                         }
                     }
                         break;
@@ -675,11 +653,11 @@ namespace SassSharp
 
                 SkipWhitespace();
 
-                c = (char)Peek();
+                c = (char) Peek();
 
                 //Expect expression node
                 ExpressionNode expressionNode = null;
-                
+
                 switch (c)
                 {
                     case '(':
@@ -691,7 +669,7 @@ namespace SassSharp
                         continue;
                     case '$':
                         Read();
-                        string name = ReadName();
+                        var name = ReadName();
                         expressionNode = new ReferenceNode(name);
                         break;
                     default:
@@ -700,7 +678,7 @@ namespace SassSharp
 
                         if (val.Key != null)
                         {
-                            if(tempNodes.Count > 0)
+                            if (tempNodes.Count > 0)
                                 throw new Exception("Unexpected key");
 
                             key = val.Key;
@@ -717,12 +695,12 @@ namespace SassSharp
 
         private KeyValuePair<string, ExpressionNode> ReadValueListItem()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             string key = null;
-            
+
             while (!EndOfStream)
             {
-                char c = (char) Peek();
+                var c = (char) Peek();
 
                 switch (c)
                 {
@@ -773,17 +751,17 @@ namespace SassSharp
 
         private void ReadString(StringBuilder buffer)
         {
-            char quote = (char)Read();
-            bool escape = false;
+            var quote = (char) Read();
+            var escape = false;
 
             buffer.Append(quote);
 
             while (!EndOfStream)
             {
-                char c = (char) Read();
+                var c = (char) Read();
                 buffer.Append(c);
 
-                if(!escape && c == quote)
+                if (!escape && c == quote)
                     return;
 
                 escape = false;
@@ -799,14 +777,11 @@ namespace SassSharp
 
             while (!EndOfStream)
             {
-                var c = (char)Read();
+                var c = (char) Read();
 
-                if(c == '\n')
+                if (c == '\n')
                     return; //Ignore single line comments for now
-                else
-                {
-                    buffer.Append(c);
-                }
+                buffer.Append(c);
             }
         }
 
@@ -844,7 +819,6 @@ namespace SassSharp
         }
 
 
-
         private ExpressionNode ParseExpressionNode(string source, char op)
         {
             if (source.StartsWith("$"))
@@ -860,7 +834,5 @@ namespace SassSharp
                 Operator = op
             };
         }
-
-        
     }
 }

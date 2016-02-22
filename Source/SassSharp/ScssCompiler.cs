@@ -10,16 +10,9 @@ namespace SassSharp
 {
     public class ScssCompiler
     {
-        
-
-        public ScssCompiler()
-        {
-            
-        }
-
         public string CompileFile(string path)
         {
-            PathFile file = new PathFile(new RealFileManager(), path);
+            var file = new PathFile(new RealFileManager(), path);
             //using (var sourceStream = file.GetStream())
             using (var destination = new MemoryStream())
             {
@@ -65,7 +58,8 @@ namespace SassSharp
             ProcessScope(tree, tree, sheet, null, -1);
         }
 
-        private void ProcessImport(string path, ScssPackage fromPackage, ScopeNode scope, CssSheet sheet, CssSelector selector, int level, string nspace = "")
+        private void ProcessImport(string path, ScssPackage fromPackage, ScopeNode scope, CssSheet sheet,
+            CssSelector selector, int level, string nspace = "")
         {
             var file = fromPackage.File.SolveReference(path);
             var tree = TreeFromFile(file);
@@ -73,7 +67,8 @@ namespace SassSharp
             ProcessScope(tree, tree, sheet, selector, level, nspace);
         }
 
-        private void ProcessScope(ScssPackage package, ScopeNode scope, CssSheet sheet, CssSelector selector, int level, string nspace = "")
+        private void ProcessScope(ScssPackage package, ScopeNode scope, CssSheet sheet, CssSelector selector, int level,
+            string nspace = "")
         {
             if (scope is SelectorNode)
             {
@@ -109,7 +104,7 @@ namespace SassSharp
                 }
                 else if (node is ImportNode)
                 {
-                    var n = (ImportNode)node;
+                    var n = (ImportNode) node;
 
                     if (n.Path.Contains(".css")
                         || n.Path.Contains("http://")
@@ -120,7 +115,7 @@ namespace SassSharp
                     }
                     else
                     {
-                        string path = n.Path.Trim('\"');
+                        var path = n.Path.Trim('\"');
                         ProcessImport(path, package, scope, sheet, selector, level, nspace);
                     }
                 }
@@ -138,15 +133,15 @@ namespace SassSharp
                 }
                 else if (node is IfNode)
                 {
-                    var n = (IfNode)node;
+                    var n = (IfNode) node;
                     var sn = n.GetActiveScope(scope);
 
-                    if(sn != null)
+                    if (sn != null)
                         ProcessScope(package, sn, sheet, selector, level, nspace);
                 }
                 else if (node is FunctionNode)
                 {
-                    var n = (FunctionNode)node;
+                    var n = (FunctionNode) node;
 
                     scope.SetFunction(n);
                 }
