@@ -18,15 +18,16 @@ namespace SassSharp.Model.Expressions
 
         public ExpressionNode B { get; set; }
 
-        public override ValueNode Resolve(ScopeNode scope)
+        public override ExpressionNode Resolve(ScopeNode scope)
         {
-            var a = A.Resolve(scope);
-            var b = B.Resolve(scope);
+            var a = A.Resolve(scope) as ValueNode;
+            var b = B.Resolve(scope) as ValueNode;
+
+            if(a == null || b == null)
+                throw new InvalidOperationException("Can only combine values");
 
             switch (CombineOperator)
             {
-                case ' ':
-                    return new ValueNode(a.Value + " " + b.Value);
                 case '*':
                     return a*b;
                 case '+':
@@ -35,9 +36,20 @@ namespace SassSharp.Model.Expressions
                     return a - b;
                 case '/':
                     return a/b;
+                case '=':
+                    return ValueNode.ValueEquals(a, b);
+                case '<':
+                    return a < b;
+                case '>':
+                    return a > b;
             }
 
             throw new Exception($"Invalid operator: {CombineOperator}");
+        }
+
+        public override string Value
+        {
+            get { return $"{A.Value} {CombineOperator} {B.Value}"; }
         }
     }
 }

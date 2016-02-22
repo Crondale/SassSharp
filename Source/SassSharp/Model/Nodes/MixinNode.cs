@@ -17,17 +17,18 @@
         {
             for (var i = 0; i < args.Length; i++)
             {
-                SetVariable(new VariableNode
-                {
-                    Name = _args[i].Name,
-                    Expression = args[i]
-                });
+                SetVariable(new VariableNode(_args[i].Name, args[i]));
             }
         }
 
         public override void SetVariable(VariableNode node)
         {
             _variables[node.Name] = node;
+        }
+
+        public override string ToString()
+        {
+            return $"@mixin {Name}";
         }
     }
 }

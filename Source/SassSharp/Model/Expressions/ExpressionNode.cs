@@ -1,4 +1,5 @@
-﻿using SassSharp.Model.Nodes;
+﻿using System;
+using SassSharp.Model.Nodes;
 
 namespace SassSharp.Model.Expressions
 {
@@ -6,6 +7,18 @@ namespace SassSharp.Model.Expressions
     {
         public char Operator { get; set; }
 
-        public abstract ValueNode Resolve(ScopeNode scope);
+        public abstract ExpressionNode Resolve(ScopeNode scope);
+
+        public abstract string Value { get; }
+
+        public static explicit operator int (ExpressionNode v)
+        {
+            return int.Parse(v.Value);
+        }
+
+        public static explicit operator string (ExpressionNode v)
+        {
+            return v.Value;
+        }
     }
 }

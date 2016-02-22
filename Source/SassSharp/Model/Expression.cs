@@ -7,14 +7,19 @@ namespace SassSharp.Model
 {
     internal class Expression
     {
-        public Expression(ExpressionNode[] nodes)
+        public Expression(ExpressionNode root)
         {
-            Root = CalculateTree(nodes);
+            Root = root;
         }
 
         public ExpressionNode Root { get; set; }
 
-        private ExpressionNode CalculateTree(ExpressionNode[] nodes)
+        public bool Empty
+        {
+            get { return Root == null; }
+        }
+
+        public static ExpressionNode CalculateTree(ExpressionNode[] nodes)
         {
             if (nodes.Length == 1) return nodes[0];
 
@@ -31,7 +36,7 @@ namespace SassSharp.Model
             }
 
             var index = 0;
-            var op = ' ';
+            var op = '+';
             for (index = 1; index < nodes.Length; index++)
             {
                 var filter = nodes[index];
@@ -48,24 +53,30 @@ namespace SassSharp.Model
             return new CombineNode(a, b, op);
         }
 
-        private int getOperatorIndex(char op)
+        private static int getOperatorIndex(char op)
         {
             switch (op)
             {
-                case '+':
+                case '=':
                     return 1;
-                case '-':
+                case '<':
                     return 2;
-                case '*':
+                case '>':
                     return 3;
+                case '+':
+                    return 11;
+                case '-':
+                    return 12;
+                case '*':
+                    return 13;
                 case '/':
-                    return 4;
+                    return 14;
             }
 
             throw new Exception($"Unexpected operator: {op}");
         }
 
-        public ValueNode Resolve(ScopeNode scope)
+        public ExpressionNode Resolve(ScopeNode scope)
         {
             return Root.Resolve(scope);
         }

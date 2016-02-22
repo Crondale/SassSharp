@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Text.RegularExpressions;
 using SassSharp.IO;
@@ -14,119 +16,234 @@ namespace SassSharp
     {
         public PathFile File { get; set; }
 
+        private int _lineNumber = 0;
+
         public ScssReader(PathFile file) : base(file.GetStream())
         {
             File = file;
         }
 
-        internal ScssPackage ReadTree()
+        public override int Peek()
         {
-            var package = new ScssPackage(File);
-            ScopeNode currentScope = package;
+            int c = base.Peek();
+            
+            //Ignore CR
+            while ((char)c == '\r')
+            {
+                base.Read();
+                c = base.Peek();
+            }
 
-            var buffer = new StringBuilder();
-            var commentBuffer = new StringBuilder();
-            var paranthesesLevel = 0;
-            var inQuotes = false;
-            var inCommentStart = false;
-            var inCommentEnd = false;
-            var inComment = false;
-            var inLineComment = false;
+            return c;
+        }
 
+        public override int Read()
+        {
+            int c = base.Read();
 
+            //Ignore CR
+            while ((char)c == '\r')
+            {
+                c = base.Read();
+            }
+
+            if ((char)c == '\n')
+                ++_lineNumber;
+
+            return c;
+        }
+
+        /// <summary>
+        /// Skips whitespace
+        /// </summary>
+        /// <returns>true if whitespace was found</returns>
+        private bool SkipWhitespace()
+        {
+            bool foundWhitespace = false;
+
+            while (!EndOfStream)
+            {
+                var c = (char)Peek();
+
+                if (char.IsWhiteSpace(c))
+                {
+                    foundWhitespace = true;
+                    Read();
+                }
+                else
+                {
+                    return foundWhitespace;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Reads one character, throwing an exception if not as expected.
+        /// </summary>
+        /// <param name="c"></param>
+        private void Expect(char expected)
+        {
+            SkipWhitespace();
+
+            if(EndOfStream)
+                throw new Exception($"Expected {expected}, end of stream");
+
+            var c = (char)Read();
+
+            if(c != expected)
+                throw new Exception($"Expected {expected}, found {c}");
+            
+        }
+
+        private string ReadUntil(char endChar)
+        {
+            StringBuilder buffer = new StringBuilder();
             while (!EndOfStream)
             {
                 var c = (char) Read();
 
-                if (inQuotes)
+                if (c == endChar)
+                    return buffer.ToString();
+
+                buffer.Append(c);
+            }
+
+            throw new Exception($"Expected {endChar}");
+        }
+
+        internal ScssPackage ReadTree()
+        {
+            var package = new ScssPackage(File);
+            package.LoadBuiltInFunctions();
+
+            ScopeNode currentScope = package;
+            ReadScopeContent(currentScope);
+
+            return package;
+        }
+
+        private void ReadScopeContent(ScopeNode currentScope)
+        {
+            var buffer = new StringBuilder();
+
+            //States
+            var inCommentStart = false;
+            var paranthesesLevel = 0;
+            var inDoubleQuotes = false;
+
+            while (!EndOfStream)
+            {
+                var c = (char)Read();
+
+                if (inDoubleQuotes)
                 {
                     buffer.Append(c);
 
                     if (c == '"')
                     {
-                        inQuotes = false;
-                    }
-                }
-                else if (inComment)
-                {
-                    switch (c)
-                    {
-                        case '*':
-                            if (!inLineComment)
-                                inCommentEnd = true;
-                            goto default;
-                        case '/':
-                            if (inCommentEnd)
-                            {
-                                inComment = false;
-
-                                commentBuffer.Append(c);
-
-                                var node = new CommentNode(commentBuffer.ToString());
-                                currentScope.Add(node);
-                                commentBuffer.Clear();
-                                inCommentEnd = false;
-                                break;
-                            }
-                            goto default;
-                        case '\n':
-                            if (inLineComment)
-                            {
-                                inLineComment = false;
-                                inComment = false;
-                                commentBuffer.Clear(); // Ignore line comments
-                                break;
-                            }
-                            goto default;
-                        case '\r':
-                            break;
-                        default:
-                            commentBuffer.Append(c);
-                            break;
+                        inDoubleQuotes = false;
                     }
                 }
                 else
                 {
-                    inCommentEnd = false;
 
                     switch (c)
                     {
                         case ' ':
+                            //Ignore starting white space
+                            if (buffer.Length == 0)
+                                break;
                             goto default;
+                        case '@':
+                            if (buffer.Length != 0)
+                                throw new Exception("Must be first character");
+
+                            ReadAt(currentScope);
+
+                            break;
                         case '/':
                             if (inCommentStart)
                             {
-                                inLineComment = true;
-                                inComment = true;
+                                ReadInlineComment();
+
                                 inCommentStart = false;
 
-                                //Move comment start to comment buffer
+                                //Remove the first slash from the buffer
                                 buffer.Length--;
-                                commentBuffer.Append("//");
-                                break;
+
                             }
-                            inCommentStart = true;
-                            goto default;
+                            else
+                            {
+                                buffer.Append(c);
+                                inCommentStart = true;
+                            }
+                            break;
                         case '*':
                             if (inCommentStart)
                             {
-                                inComment = true;
+                                var node = ReadComment();
+                                currentScope.Add(node);
+                                inCommentStart = false;
 
-                                //Move comment start to comment buffer
+                                //Remove the first slash from the buffer
                                 buffer.Length--;
-                                commentBuffer.Append("/*");
                                 break;
                             }
                             goto default;
                         case ';':
-                        {
-                            var node = ParseStatementNode(buffer.ToString());
-                            currentScope.Add(node);
-                            buffer.Clear();
-                        }
+                            {
+                                throw new Exception("Unexpected ;");
+                            }
+                        case ':':
+                            char pc = (char) Peek();
+                            if (char.IsLetter(pc))//hover etc.
+                            {
+                                buffer.Append(c);
+                            }
+                            else
+                            {
+                                var expr = ReadValue(false);
+
+                                if (buffer[0] == '$')
+                                {
+                                    var node = new VariableNode(
+                                        buffer.ToString().Trim().TrimStart('$'),
+                                        new Expression(expr));
+                                    buffer.Clear();
+                                    currentScope.Add(node);
+                                    
+                                    if ((char)Read() != ';')
+                                        throw new Exception("Excpected ;");
+                                }
+                                else { 
+                                    var pn = new PropertyNode();
+                                    pn.Name = buffer.ToString().Trim();
+                                    pn.Expression = new Expression(expr);
+                                    buffer.Clear();
+
+                                    char pc2 = (char) Read();
+                                    if (pc2 == ';')
+                                    {
+                                        currentScope.Add(pn);
+                                    }
+                                    else if (pc2 == '{')
+                                    {
+                                        var result = new NamespaceNode(pn);
+                                        ReadScopeContent(result);
+                                        currentScope.Add(result);
+
+                                    }
+                                    else
+                                    {
+                                        throw new Exception("Expected { or ;");
+                                    }
+                                }
+                            }
                             break;
                         case '"':
-                            inQuotes = true;
+                            inDoubleQuotes = true;
                             goto default;
                         case '(':
                             paranthesesLevel++;
@@ -135,127 +252,409 @@ namespace SassSharp
                             paranthesesLevel--;
                             goto default;
                         case '{':
-                            if (paranthesesLevel == 0)
                             {
-                                var node = ParseScopeNode(buffer.ToString());
+                                var node = new SelectorNode();
+                                node.Selector = buffer.ToString().Trim();
+                                ReadScopeContent(node);
                                 currentScope.Add(node);
-                                currentScope = node;
                                 buffer.Clear();
                             }
                             break;
                         case '}':
-                            currentScope = currentScope.Parent;
-
-                            if (currentScope == null)
-                                throw new Exception("Unexpected }");
-                            break;
-                        case '\r':
+                            return;
+                        case '\n':
+                            inCommentStart = false;
                             break;
                         default:
+                            inCommentStart = false;
                             buffer.Append(c);
                             break;
                     }
                 }
             }
 
-            return package;
+            return;
         }
 
-        private CodeNode ParseStatementNode(string source)
+        private void ReadAt(ScopeNode currentScope)
         {
-            var m = Regex.Match(source, @"^\s*\$(?<name>[^:\s]+):\s*(?<value>[^;]+)\s*$");
-
-            if (m.Success)
+            StringBuilder buffer = new StringBuilder();
+            while (!EndOfStream)
             {
-                var result = new VariableNode();
-                result.Name = m.Groups["name"].Value;
-                result.Expression = ParseExpression(m.Groups["value"].Value);
+                char c = (char) Read();
 
-                return result;
+                if(c == ' ')
+                    break;
+
+                buffer.Append(c);
             }
 
-            m = Regex.Match(source, @"^\s*@include (?<name>[^:\s]+)\s*\((?<arg>[^,)]+,?)*\)\s*$");
+            String type = buffer.ToString();
 
-            if (m.Success)
+            SkipWhitespace();
+
+            switch (type)
             {
-                var argsGroup = m.Groups["arg"];
-                var args = new Expression[argsGroup.Captures.Count];
+                case "mixin":
+                    ReadMixin(currentScope);
+                    break;
+                case "include":
+                    ReadInclude(currentScope);
+                    break;
+                case "import":
+                    ReadImport(currentScope);
+                    break;
+                case "function":
+                    ReadFunction(currentScope);
+                    break;
+                case "return":
+                    ReadReturn(currentScope);
+                    break;
+                default:
+                    throw new Exception($"Could not recognize @{type}");
+            }
+        }
 
-                for (var i = 0; i < argsGroup.Captures.Count; i++)
+        private void ReadImport(ScopeNode currentScope)
+        {
+            string path = ReadUntil(';');
+
+            currentScope.Add(new ImportNode(path));
+        }
+
+
+
+        private void ReadMixin(ScopeNode currentScope)
+        {
+            string name = ReadName();
+
+            var args = ReadArgumentDefinition();
+
+            var node = new MixinNode(name, args.ToArray());
+            Expect('{');
+            ReadScopeContent(node);
+            currentScope.Add(node);
+
+        }
+
+        private void ReadInclude(ScopeNode currentScope)
+        {
+            string name = ReadName();
+            var args = ReadArgumentCall();
+            Expect(';');
+
+            var result = new IncludeNode(name, args.ToArray());
+            currentScope.Add(result);
+        }
+
+        private void ReadFunction(ScopeNode currentScope)
+        {
+            string name = ReadName();
+
+            var args = ReadArgumentDefinition();
+
+            var node = new FunctionNode(name, args.ToArray());
+            Expect('{');
+            ReadScopeContent(node);
+            currentScope.Add(node);
+
+        }
+
+        private void ReadReturn(ScopeNode currentScope)
+        {
+            ExpressionNode value = ReadValue(false);
+            Expect(';');
+            var result = new ReturnNode(new Expression(value));
+            currentScope.Add(result);
+
+        }
+
+        private IEnumerable<Expression> ReadArgumentCall()
+        {
+            var result = new List<Expression>();
+
+            Expect('(');
+            
+            while (!EndOfStream)
+            {
+                SkipWhitespace();
+                char c = (char)Peek();
+
+                if (c == ')')
                 {
-                    args[i] = ParseExpression(argsGroup.Captures[i].Value);
+                    Read();
+                    return result;
                 }
 
-                var result = new IncludeNode(m.Groups["name"].Value, args);
-
-
-                return result;
+                Expression expr = new Expression(ReadValue(true));
+                result.Add(expr);
             }
 
-            m = Regex.Match(source, @"^\s*@import (?<path>[^;]+)\s*$");
+            throw new Exception("Could not find argument ending");
+        }
 
-            if (m.Success)
+        private IEnumerable<VariableNode> ReadArgumentDefinition()
+        {
+            var result = new List<VariableNode>();
+
+            Expect('(');
+
+            while (!EndOfStream)
             {
-                var result = new ImportNode(m.Groups["path"].Value);
+                char c = (char) Read();
+
+                switch (c)
+                {
+                    case '$':
+                        string name = ReadName();
+
+                        var node = new VariableNode(name);
+                        result.Add(node);
+
+                        SkipWhitespace();
+                        c = (char) Peek();
+                        if (c == ':')
+                        {
+                            Read();
+                            node.Expression = new Expression(ReadValue(true));
+                        }
+                        
+                        break;
+                    case ',':
+                    case ' ':
+                        break;
+                    case ')':
+                        return result;
+                }
+
+                //var expr = ReadValue();
+            }
+
+            throw new Exception("Could not find argument ending");
+        }
+
+
+        /// <summary>
+        /// Reads a name, stopping at (, {, ; and whitespace.  Avoids consuming the last character
+        /// </summary>
+        /// <returns></returns>
+        private string ReadName()
+        {
+            char firstChar = (char)Peek();
+
+            if (!char.IsLetter(firstChar))
+                throw new Exception("First character in name must be a letter");
+
+            StringBuilder buffer = new StringBuilder();
+            buffer.Append((char)Read());
+
+            while (!EndOfStream)
+            {
+                char c = (char)Peek();
+
+                if (!char.IsLetter(c)
+                    && !char.IsDigit(c)
+                    && c != '-'
+                    && c != '_')
+                    break;
                 
-                return result;
+                buffer.Append((char)Read());
             }
 
-            return ParsePropertyNode(source);
+            return buffer.ToString();
         }
 
-        [Obsolete]
-        private IEnumerable<Expression> ParseValue(string source)
+
+        private ValueList ReadValue(bool returnOnComma)
         {
-            var m = Regex.Match(source, @"^(\s*(?:[a-zA-Z0-9_$%#-]+)\s*(?:(?:[+-/*])\s*(?:[a-zA-Z0-9_%#-]+)\s*)*)+\s*$");
+            ValueList result = new ValueList();
+            List<ExpressionNode> tempNodes = new List<ExpressionNode>();
+            var buffer = new StringBuilder();
+            bool afterSpace = false;
+            bool afterOperator = false;
+            char op = '+';
+            string key = null;
+            bool inDoubleQuotes = false;
 
-            if (!m.Success)
-                throw new Exception("Could not recognize value");
-
-            foreach (Capture capture in m.Groups[1].Captures)
+            while (!EndOfStream)
             {
-                yield return ParseExpression(capture.Value);
+                if (inDoubleQuotes)
+                {
+                    var c = (char) Read();
+
+                    buffer.Append(c);
+
+                    if (c == '"')
+                    {
+                        inDoubleQuotes = false;
+                    }
+                    continue;
+                }
+                else
+                {
+
+                    var c = (char) Peek();
+
+                    if (c == ')' || c == '{' || c == ';' || (c == ',' && returnOnComma))
+                    {
+                        if (buffer.Length > 0)
+                        {
+                            tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                        }
+
+                        if (tempNodes.Count != 0)
+                        {
+                            result.Add(key, Expression.CalculateTree(tempNodes.ToArray()));
+                        }
+
+                        if (result.Count == 0)
+                            return null;
+
+                        return result;
+                    }
+
+                    c = (char) Read();
+
+                    switch (c)
+                    {
+                        case ',':
+                            if (!afterOperator)
+                                afterSpace = true;
+                            result.PreferComma = true;
+                            break;
+                        case ' ':
+                            if (!afterOperator)
+                                afterSpace = true;
+                            break;
+                        case '(':
+                            ExpressionNode inner = ReadValue(false);
+
+                            Expect(')');
+
+                            if (buffer.Length != 0)
+                            {
+                                inner = new FunctionCallNode(buffer.ToString(), (ValueList) inner);
+                                buffer.Clear();
+                            }
+
+                            inner.Operator = op;
+                            tempNodes.Add(inner);
+
+                            break;
+                        case '-':
+                        case '+':
+                        case '*':
+                        case '/':
+                        case '<':
+                        case '>':
+                        case '=':
+                            if (c == '-' && !afterSpace)
+                                goto default;
+
+                            if (buffer.Length > 0)
+                            {
+                                tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                                buffer.Clear();
+                            }
+                            op = c;
+
+                            afterSpace = false;
+                            afterOperator = true;
+                            break;
+                        case '\n':
+                            break;
+                        case '"':
+                            inDoubleQuotes = true;
+                            goto default;
+                        case ':':
+                            key = buffer.ToString().Trim('\"', '\'');
+                            buffer.Clear();
+                            break;
+                        default:
+                            if (afterSpace)
+                            {
+                                if (buffer.Length != 0)
+                                {
+                                    tempNodes.Add(ParseExpressionNode(buffer.ToString(), op));
+                                    op = ' ';
+                                    buffer.Clear();
+                                }
+
+                                if (tempNodes.Count > 0)
+                                {
+                                    result.Add(key, Expression.CalculateTree(tempNodes.ToArray()));
+                                    tempNodes.Clear();
+                                }
+
+                                afterSpace = false;
+                                key = null;
+                            }
+                            buffer.Append(c);
+                            afterSpace = false;
+                            afterOperator = false;
+                            break;
+                    }
+
+                }
             }
+
+            throw new Exception("Could not find en of expression");
         }
-
-        private Expression ParseExpression(string source)
+        
+        private void ReadInlineComment()
         {
-            if (string.IsNullOrWhiteSpace(source))
-                return null;
+            var buffer = new StringBuilder("//");
 
-            var m = Regex.Match(source,
-                @"^\s*(?<first>[a-zA-Z0-9_$%#,-]+)(?:(?<op>\s*[+-/*]\s*|\s+)(?<other>[a-zA-Z0-9_$%#,-]+)\s*)*\s*$");
-
-            if (!m.Success)
-                throw new Exception("Could not recognize expression");
-
-            var firstGroup = m.Groups["first"];
-            var othersGroup = m.Groups["other"];
-            var opGroup = m.Groups["op"];
-
-            var nodes = new ExpressionNode[othersGroup.Captures.Count + 1];
-
-            nodes[0] = ParseExpressionNode(firstGroup.Value, "+");
-
-            for (var i = 0; i < othersGroup.Captures.Count; i++)
+            while (!EndOfStream)
             {
-                nodes[i + 1] = ParseExpressionNode(othersGroup.Captures[i].Value, opGroup.Captures[i].Value);
+                var c = (char)Read();
+
+                if(c == '\n')
+                    return; //Ignore single line comments for now
+                else
+                {
+                    buffer.Append(c);
+                }
             }
-
-            var e = new Expression(nodes);
-
-            return e;
         }
 
-        private ExpressionNode ParseExpressionNode(string source, string opSource)
+        private CommentNode ReadComment()
         {
-            var op = ' ';
+            var buffer = new StringBuilder("/*");
+            var inCommentEnd = false;
 
-            opSource = opSource.Trim();
+            while (!EndOfStream)
+            {
+                var c = (char) Read();
 
-            if (opSource.Length > 0)
-                op = opSource[0];
+                switch (c)
+                {
+                    case '*':
+                        inCommentEnd = true;
+                        buffer.Append(c);
+                        break;
+                    case '/':
+                        if (inCommentEnd)
+                        {
+                            buffer.Append(c);
 
+                            return new CommentNode(buffer.ToString());
+                        }
+                        goto default;
+                    default:
+                        inCommentEnd = false;
+                        buffer.Append(c);
+                        break;
+                }
+            }
+
+            throw new Exception("Could not find comment end");
+        }
+
+
+
+        private ExpressionNode ParseExpressionNode(string source, char op)
+        {
             if (source.StartsWith("$"))
             {
                 return new ReferenceNode(source.Substring(1))
@@ -270,61 +669,6 @@ namespace SassSharp
             };
         }
 
-        private PropertyNode ParsePropertyNode(string source)
-        {
-            var m = Regex.Match(source, @"^\s*(?<name>[^:\s]+)\s*:\s*(?<value>[^;]+)\s*$");
-
-            if (!m.Success)
-                throw new Exception("Failed to parse property");
-
-            var result = new PropertyNode();
-            result.Name = m.Groups["name"].Value;
-            result.Expression = ParseExpression(m.Groups["value"].Value);
-
-            return result;
-        }
-
-        private ScopeNode ParseScopeNode(string source)
-        {
-            var m = Regex.Match(source, @"^\s*@mixin (?<name>[^:\s]+)\s*\((?:\s*\$(?<arg>[^,)]+),?)*\)\s*$");
-
-            if (m.Success)
-            {
-                var argsGroup = m.Groups["arg"];
-                var args = new VariableNode[argsGroup.Captures.Count];
-
-                for (var i = 0; i < argsGroup.Captures.Count; i++)
-                {
-                    args[i] = new VariableNode
-                    {
-                        Name = argsGroup.Captures[i].Value
-                    };
-                }
-
-                var result = new MixinNode(m.Groups["name"].Value, args);
-
-                return result;
-            }
-
-            //Check for extended properties
-            m = Regex.Match(source, @":[^a-z]");
-            if (m.Success)
-            {
-                var pn = ParsePropertyNode(source);
-
-                var result = new NamespaceNode(pn);
-
-                return result;
-            }
-
-            {
-                source = source.Trim();
-
-                var result = new SelectorNode();
-                result.Selector = source;
-
-                return result;
-            }
-        }
+        
     }
 }

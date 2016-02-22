@@ -8,5 +8,10 @@
         }
 
         public string Comment { get; set; }
+
+        public override string ToString()
+        {
+            return Comment;
+        }
     }
 }
