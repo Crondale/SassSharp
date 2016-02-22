@@ -131,7 +131,7 @@ namespace SassSharp.Model.Expressions
                 return new ValueNode(calculation(x._value, y._value), y._textValue);
             }
 
-            return new ValueNode(calculation(y._value, x._value));
+            return new ValueNode(calculation(x._value, y._value));
         }
     }
 }

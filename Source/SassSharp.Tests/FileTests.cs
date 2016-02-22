@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using LibSassHost;
 using Xunit;
 
 namespace SassSharp.Tests
@@ -27,11 +26,11 @@ namespace SassSharp.Tests
         public void TestFile(string sourcePath)
         {
             //var sres = new LibSassNet.SassCompiler().CompileFile(sourcePath, OutputStyle.Nested, null, false);
-            var sres = new SassCompiler().CompileFile(sourcePath, null, new CompilationOptions
+            var sres = new LibSassHost.SassCompiler().CompileFile(sourcePath, null, new LibSassHost.CompilationOptions
             {
-                OutputStyle = OutputStyle.Nested,
-                LineFeedType = LineFeedType.Lf,
-                IndentType = IndentType.Space,
+                OutputStyle = LibSassHost.OutputStyle.Nested,
+                LineFeedType = LibSassHost.LineFeedType.Lf,
+                IndentType = LibSassHost.IndentType.Space,
                 IndentWidth = 2
             });
 
