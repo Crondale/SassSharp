@@ -103,5 +103,10 @@ namespace SassSharp.Model
 
             return new ValueList(node);
         }
+
+        public void RemoveAt(int i)
+        {
+            _items.RemoveAt(i);
+        }
     }
 }

@@ -692,6 +692,9 @@ namespace SassSharp
         {
             char quote = (char)Read();
             bool escape = false;
+
+            buffer.Append(quote);
+
             while (!EndOfStream)
             {
                 char c = (char) Read();

@@ -26,6 +26,12 @@ namespace SassSharp.Model
 
         public override void SetVariable(VariableNode node)
         {
+            if (node.Default)
+            {
+                if(HasVariable(node.Name))
+                    return;
+            }
+
             _variables[node.Name] = node;
         }
 
