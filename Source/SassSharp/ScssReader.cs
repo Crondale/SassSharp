@@ -635,7 +635,6 @@ namespace SassSharp
                         else
                         {
                             op = c;
-                            Read();
                             Expect('=');
                         }
                         break;
