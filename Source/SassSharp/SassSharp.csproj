@@ -79,6 +79,7 @@
     <Compile Include="Model\Nodes\SelectorNode.cs" />
     <Compile Include="Model\Nodes\VariableNode.cs" />
     <Compile Include="Model\Expressions\ValueList.cs" />
+    <Compile Include="Model\ScssString.cs" />
     <Compile Include="ScssCompiler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScssReader.cs" />

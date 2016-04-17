@@ -1,13 +1,19 @@
-﻿namespace SassSharp.Model.Nodes
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace SassSharp.Model.Nodes
 {
     internal class SelectorNode : ScopeNode
     {
-        public string Selector { get; set; }
+        public SelectorNode()
+        {
+        }
 
+        public ScssString Selector { get; set; }
 
         public override string ToString()
         {
-            return Selector;
+            return Selector.ToString();
         }
     }
 }

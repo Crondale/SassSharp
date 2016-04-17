@@ -2,7 +2,7 @@
 {
     internal class PropertyNode : CodeNode
     {
-        public string Name { get; set; }
+        public ScssString Name { get; set; }
 
         public Expression Expression { get; set; }
     }

@@ -141,6 +141,7 @@ namespace SassSharp
         private void ReadScopeContent(ScopeNode currentScope)
         {
             var buffer = new StringBuilder();
+            var interpolations = new List<ValueList>();
 
             //States
             var inCommentStart = false;
@@ -224,7 +225,7 @@ namespace SassSharp
                             else
                             {
                                 var pn = new PropertyNode();
-                                pn.Name = buffer.ToString().Trim();
+                                pn.Name = new ScssString(buffer.ToString().Trim(), interpolations);
                                 pn.Expression = new Expression(ReadValueList(';', '{'));
                                 buffer.Clear();
 
@@ -257,7 +258,7 @@ namespace SassSharp
                         case '{':
                         {
                             var node = new SelectorNode();
-                            node.Selector = buffer.ToString().Trim();
+                            node.Selector = new ScssString(buffer.ToString().Trim(), interpolations);
                             ReadScopeContent(node);
                             currentScope.Add(node);
                             buffer.Clear();
@@ -265,6 +266,19 @@ namespace SassSharp
                             break;
                         case '}':
                             return;
+                        case '#':
+                            if (Peek() == '{')
+                            {
+                                inCommentStart = false;
+                                var value = ReadInterpolation();
+                                buffer.Append("{" + interpolations.Count + "}");
+                                interpolations.Add(value);
+                                break;
+                            }
+                            else
+                            {
+                                goto default;
+                            }
                         case '\n':
                             inCommentStart = false;
                             break;
@@ -275,6 +289,14 @@ namespace SassSharp
                     }
                 }
             }
+        }
+
+        private ValueList ReadInterpolation()
+        {
+            Expect('{');
+            ValueList vl = ReadValueList('}');
+            Expect('}');
+            return vl;
         }
 
         private void ReadAt(ScopeNode currentScope)

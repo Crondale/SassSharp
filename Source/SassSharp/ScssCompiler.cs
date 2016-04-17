@@ -73,7 +73,7 @@ namespace SassSharp
             if (scope is SelectorNode)
             {
                 var snode = (SelectorNode) scope;
-                var s = snode.Selector;
+                var s = snode.Selector.Resolve(scope);
                 if (selector != null)
                 {
                     s = ExpandSelector(selector.Selector, s);
@@ -93,7 +93,7 @@ namespace SassSharp
 
                     var value = n.Expression.Resolve(scope).Value;
 
-                    selector.Add(new CssProperty(nspace + n.Name, value, level + 1));
+                    selector.Add(new CssProperty(nspace + n.Name.Resolve(scope), value, level + 1));
                 }
                 else if (node is MediaNode)
                 {
@@ -172,15 +172,16 @@ namespace SassSharp
                     var subLevel = level;
 
                     var n = (NamespaceNode) node;
+                    string header = n.Header.Name.Resolve(scope);
                     if (!n.Header.Expression.Empty)
                     {
                         var value = n.Header.Expression.Resolve(scope).Value;
-                        selector.Add(new CssProperty(n.Header.Name, value, level + 1));
+                        selector.Add(new CssProperty(header, value, level + 1));
 
                         subLevel++;
                     }
 
-                    ProcessScope(package, (ScopeNode) node, root, selector, subLevel, n.Header.Name + "-");
+                    ProcessScope(package, (ScopeNode) node, root, selector, subLevel, header + "-");
                 }
                 else if (node is IncludeNode)
                 {
