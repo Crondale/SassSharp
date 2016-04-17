@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using SassSharp.Model.Expressions;
 using SassSharp.Model.Nodes;
 
 namespace SassSharp.Model
 {
-    internal class ValueList : ExpressionNode
+    internal class ValueList : ExpressionNode, IEnumerable<ExpressionNode>
     {
         private readonly List<ExpressionNode> _items = new List<ExpressionNode>();
         private Dictionary<string, int> _keys = new Dictionary<string, int>();
@@ -50,6 +51,20 @@ namespace SassSharp.Model
                 return _items[_keys[key]];
             }
         }
+
+        public IEnumerator<ExpressionNode> GetEnumerator()
+        {
+            foreach (var expressionNode in _items)
+            {
+                yield return expressionNode;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
 
         public void Add(ExpressionNode value)
         {

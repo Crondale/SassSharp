@@ -1,0 +1,6 @@
+﻿
+@each $color in #FFF, #EEE, #DDD, #CCC {
+  .test {
+      color: $color;
+  }
+}

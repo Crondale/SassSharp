@@ -80,13 +80,25 @@ namespace SassSharp
             return false;
         }
 
+        private void Expect(string expected, bool skipWhitespace = true)
+        {
+            if (skipWhitespace)
+                SkipWhitespace();
+
+            foreach (char c in expected)
+            {
+                Expect(c, false);
+            }
+        }
+
         /// <summary>
         ///     Reads one character, throwing an exception if not as expected.
         /// </summary>
         /// <param name="c"></param>
-        private void Expect(char expected)
+        private void Expect(char expected, bool skipWhitespace = true)
         {
-            SkipWhitespace();
+            if (skipWhitespace)
+                SkipWhitespace();
 
             if (EndOfStream)
                 throw new ScssReaderException($"Expected {expected}, end of stream", File.Path, _lineNumber);
@@ -334,6 +346,9 @@ namespace SassSharp
                 case "else":
                     ReadElse(currentScope);
                     break;
+                case "each":
+                    ReadEach(currentScope);
+                    break;
                 default:
                     throw new ScssReaderException($"Could not recognize @{type}", File.Path, _lineNumber);
             }
@@ -379,6 +394,21 @@ namespace SassSharp
             parentIf.Elses.Add(elseNode);
 
             ReadScopeContent(elseNode);
+        }
+
+        private void ReadEach(ScopeNode currentScope)
+        {
+            Expect('$');
+            var varName = ReadName();
+            
+            Expect("in");
+            var val = ReadValueList('{');
+            Expect('{');
+
+            var node = new EachNode(new VariableNode(varName), val);
+            currentScope.Add(node);
+
+            ReadScopeContent(node);
         }
 
 

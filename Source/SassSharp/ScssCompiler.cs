@@ -161,6 +161,18 @@ namespace SassSharp
                     if (sn != null)
                         ProcessScope(package, sn, root, selector, level, nspace);
                 }
+                else if (node is EachNode)
+                {
+                    var n = (EachNode) node;
+                    var var = n.Variable;
+
+                    foreach (var value in n.List)
+                    {
+                        var.Expression = new Expression(value);
+                        n.SetVariable(var);
+                        ProcessScope(package, n, root, selector, level, nspace);
+                    }
+                }
                 else if (node is FunctionNode)
                 {
                     var n = (FunctionNode) node;
