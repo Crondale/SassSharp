@@ -11,20 +11,20 @@ string cssContent = sres.CompiledContent;
 ```
 
 ##Roadmap feature support
-~~Nested Selectors~~
-~~Lists~~
-~~Sass script~~
-~~Comments~~
-~~Interpolation~~
-~~Nested properties~~
-~~Variables~~
+* ~~Nested Selectors~~
+* ~~Lists~~
+* ~~Sass script~~
+* ~~Comments~~
+* ~~Interpolation~~
+* ~~Nested properties~~
+* ~~Variables~~
 
-~~@import~~
-~~@mixin~~
-~~@media~~
-~~@if~~
-@each
-@for
+* ~~@import~~
+* ~~@mixin~~
+* ~~@media~~
+* ~~@if~~
+* @each
+* @for
 
 ##Contribution
 New features and bug fixes is done tests first.  Tests are done by creating scss files in testfiles folder and are automatically compared using LibSass.
