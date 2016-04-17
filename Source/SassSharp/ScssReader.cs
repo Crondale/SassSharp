@@ -627,9 +627,17 @@ namespace SassSharp
 
                         continue;
                     case '=':
-                        op = c;
                         Read();
-                        Expect('=');
+                        if (Peek() != '=')
+                        {
+                            op = 'e';
+                        }
+                        else
+                        {
+                            op = c;
+                            Read();
+                            Expect('=');
+                        }
                         break;
                     case '-':
                     case '+':
