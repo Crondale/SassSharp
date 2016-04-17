@@ -32,12 +32,36 @@ namespace SassSharp
                 {
                     WriteComment((CssComment) node);
                 }
+                else if (node is CssMedia)
+                {
+                    WriteMedia(lastLevel, (CssMedia) node);
+                }
                 else if (node is CssImport)
                 {
                     WriteImport((CssImport) node);
                 }
                 Write(_lineBreak);
             }
+        }
+
+        private void WriteMedia(int lastLevel, CssMedia node)
+        {
+            for (var i = 0; i < node.Level; i++)
+                Write(_indentation);
+
+            Write("@media {0}", node.Definition);
+            Write(" {");
+
+            foreach (var child in node.Nodes)
+            {
+                Write(_lineBreak);
+                if (child is CssSelector)
+                {
+                    WriteSelector(node.Level, (CssSelector) child);
+                }
+            }
+
+            Write(" }");
         }
 
         private void WriteImport(CssImport node)

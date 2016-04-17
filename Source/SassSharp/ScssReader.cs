@@ -319,6 +319,9 @@ namespace SassSharp
 
             switch (type)
             {
+                case "media":
+                    ReadMedia(currentScope);
+                    break;
                 case "mixin":
                     ReadMixin(currentScope);
                     break;
@@ -393,6 +396,21 @@ namespace SassSharp
             var path = ReadUntil(';');
 
             currentScope.Add(new ImportNode(path));
+        }
+
+
+        private void ReadMedia(ScopeNode currentScope)
+        {
+            var def = ReadUntil('{');
+
+            MediaNode node = new MediaNode()
+            {
+                Definition = def.TrimEnd()
+            };
+
+
+            ReadScopeContent(node);
+            currentScope.Add(node);
         }
 
 

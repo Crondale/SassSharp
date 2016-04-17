@@ -1,6 +1,6 @@
 ﻿namespace SassSharp.Model.Css
 {
-    internal class CssSheet : CssNode
+    internal class CssSheet : CssRoot
     {
         public CssSheet()
             : base(-1)

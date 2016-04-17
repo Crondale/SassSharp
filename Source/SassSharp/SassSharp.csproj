@@ -47,8 +47,10 @@
     <Compile Include="Model\CodeNode.cs" />
     <Compile Include="Model\Css\CssComment.cs" />
     <Compile Include="Model\Css\CssImport.cs" />
+    <Compile Include="Model\Css\CssMedia.cs" />
     <Compile Include="Model\Css\CssNode.cs" />
     <Compile Include="Model\Css\CssProperty.cs" />
+    <Compile Include="Model\Css\CssRoot.cs" />
     <Compile Include="Model\Css\CssSelector.cs" />
     <Compile Include="Model\Css\CssSheet.cs" />
     <Compile Include="Model\Expression.cs" />
@@ -64,6 +66,7 @@
     <Compile Include="Model\Nodes\IncludeNode.cs" />
     <Compile Include="Model\Nodes\FunctionNode.cs" />
     <Compile Include="Model\Nodes\IfNode.cs" />
+    <Compile Include="Model\Nodes\MediaNode.cs" />
     <Compile Include="Model\Nodes\MixinNode.cs" />
     <Compile Include="Model\Nodes\NamespaceNode.cs" />
     <Compile Include="Model\Nodes\ReturnNode.cs" />

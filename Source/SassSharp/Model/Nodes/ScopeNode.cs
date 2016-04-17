@@ -2,7 +2,7 @@
 
 namespace SassSharp.Model.Nodes
 {
-    internal class ScopeNode : CodeNode
+    class ScopeNode : CodeNode
     {
         private readonly List<CodeNode> _nodes = new List<CodeNode>();
         protected readonly Dictionary<string, VariableNode> _variables = new Dictionary<string, VariableNode>();

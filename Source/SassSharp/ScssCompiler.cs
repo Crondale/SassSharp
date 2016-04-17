@@ -58,16 +58,16 @@ namespace SassSharp
             ProcessScope(tree, tree, sheet, null, -1);
         }
 
-        private void ProcessImport(string path, ScssPackage fromPackage, ScopeNode scope, CssSheet sheet,
+        private void ProcessImport(string path, ScssPackage fromPackage, ScopeNode scope, CssRoot root,
             CssSelector selector, int level, string nspace = "")
         {
             var file = fromPackage.File.SolveReference(path);
             var tree = TreeFromFile(file);
 
-            ProcessScope(tree, tree, sheet, selector, level, nspace);
+            ProcessScope(tree, tree, root, selector, level, nspace);
         }
 
-        private void ProcessScope(ScssPackage package, ScopeNode scope, CssSheet sheet, CssSelector selector, int level,
+        private void ProcessScope(ScssPackage package, ScopeNode scope, CssRoot root, CssSelector selector, int level,
             string nspace = "")
         {
             if (scope is SelectorNode)
@@ -80,7 +80,7 @@ namespace SassSharp
                 }
 
                 selector = new CssSelector(s, level);
-                sheet.Add(selector);
+                root.Add(selector);
             }
 
             foreach (var node in scope.Nodes)
@@ -95,12 +95,29 @@ namespace SassSharp
 
                     selector.Add(new CssProperty(nspace + n.Name, value, level + 1));
                 }
+                else if (node is MediaNode)
+                {
+                    var n = (MediaNode) node;
+                    var s = new CssMedia(level + 1)
+                    {
+                        Definition = n.Definition
+                    };
+
+                    root.Add(s);
+
+                    selector = new CssSelector(selector.Selector, level + 2);
+                    s.Add(selector);
+                    ProcessScope(package, (ScopeNode) n, s, selector, level + 2, nspace);
+                }
                 else if (node is CommentNode)
                 {
-                    if (selector == null)
-                        sheet.Add(new CssComment(((CommentNode) node).Comment, level + 1));
-                    else
-                        selector.Add(new CssComment(((CommentNode) node).Comment, level + 1));
+                    var n = (CommentNode) node;
+                    CssNode p = root;
+
+                    if (selector != null)
+                        p = selector;
+
+                    p.Add(new CssComment(n.Comment, level + 1));
                 }
                 else if (node is ImportNode)
                 {
@@ -111,12 +128,12 @@ namespace SassSharp
                         || n.Path.Contains("url(")
                         || n.Path.Contains(" "))
                     {
-                        sheet.Add(new CssImport(n.Path, level + 1));
+                        root.Add(new CssImport(n.Path, level + 1));
                     }
                     else
                     {
                         var path = n.Path.Trim('\"');
-                        ProcessImport(path, package, scope, sheet, selector, level, nspace);
+                        ProcessImport(path, package, scope, root, selector, level, nspace);
                     }
                 }
                 else if (node is VariableNode)
@@ -137,7 +154,7 @@ namespace SassSharp
                     var sn = n.GetActiveScope(scope);
 
                     if (sn != null)
-                        ProcessScope(package, sn, sheet, selector, level, nspace);
+                        ProcessScope(package, sn, root, selector, level, nspace);
                 }
                 else if (node is FunctionNode)
                 {
@@ -158,7 +175,7 @@ namespace SassSharp
                         subLevel++;
                     }
 
-                    ProcessScope(package, (ScopeNode) node, sheet, selector, subLevel, n.Header.Name + "-");
+                    ProcessScope(package, (ScopeNode) node, root, selector, subLevel, n.Header.Name + "-");
                 }
                 else if (node is IncludeNode)
                 {
@@ -169,11 +186,11 @@ namespace SassSharp
 
                     mn.Initialize(n.Arguments);
 
-                    ProcessScope(package, mn, sheet, selector, level);
+                    ProcessScope(package, mn, root, selector, level);
                 }
                 else if (useNode is SelectorNode)
                 {
-                    ProcessScope(package, (ScopeNode) node, sheet, selector, level + 1);
+                    ProcessScope(package, (ScopeNode) node, root, selector, level + 1);
                 }
             }
         }
