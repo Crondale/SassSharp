@@ -243,44 +243,6 @@ namespace SassSharp
                                 {
                                     throw new ScssReaderException("Expected { or ;", File.Path, _lineNumber);
                                 }
-
-                                /*
-                                var expr = ReadValue(false);
-
-                                if (buffer[0] == '$')
-                                {
-                                    var node = new VariableNode(
-                                        buffer.ToString().Trim().TrimStart('$'),
-                                        new Expression(expr));
-                                    buffer.Clear();
-                                    currentScope.Add(node);
-                                    
-                                    if ((char)Read() != ';')
-                                        throw new Exception("Excpected ;");
-                                }
-                                else { 
-                                    var pn = new PropertyNode();
-                                    pn.Name = buffer.ToString().Trim();
-                                    pn.Expression = new Expression(expr);
-                                    buffer.Clear();
-
-                                    char pc2 = (char) Read();
-                                    if (pc2 == ';')
-                                    {
-                                        currentScope.Add(pn);
-                                    }
-                                    else if (pc2 == '{')
-                                    {
-                                        var result = new NamespaceNode(pn);
-                                        ReadScopeContent(result);
-                                        currentScope.Add(result);
-
-                                    }
-                                    else
-                                    {
-                                        throw new Exception("Expected { or ;");
-                                    }
-                                }*/
                             }
                             break;
                         case '"':
