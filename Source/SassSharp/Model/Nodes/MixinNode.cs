@@ -13,8 +13,10 @@
 
         public string Name { get; set; }
 
-        public void Initialize(ValueList args)
+        public void Initialize(IncludeNode includeNode)
         {
+            SetContent(includeNode);
+            var args = includeNode.Arguments;
             for (var i = 0; i < args.Count; i++)
             {
                 SetVariable(new VariableNode(_args[i].Name, args[i]));

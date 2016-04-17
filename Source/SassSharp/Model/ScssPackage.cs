@@ -21,6 +21,7 @@ namespace SassSharp.Model
         public void LoadBuiltInFunctions()
         {
             SetFunction(new IfFunction());
+            SetFunction(new UrlFunction());
         }
 
         public override void SetVariable(VariableNode node)

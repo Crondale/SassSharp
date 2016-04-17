@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using SassSharp.Model.Css;
 
 namespace SassSharp
@@ -26,6 +27,10 @@ namespace SassSharp
             {
                 if (node is CssSelector)
                 {
+                    //Ignore empty selector nodes
+                    if (!node.Nodes.Any())
+                        continue;
+
                     lastLevel = WriteSelector(lastLevel, (CssSelector) node);
                 }
                 else if (node is CssComment)
@@ -40,6 +45,7 @@ namespace SassSharp
                 {
                     WriteImport((CssImport) node);
                 }
+
                 Write(_lineBreak);
             }
         }

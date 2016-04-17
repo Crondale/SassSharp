@@ -60,6 +60,8 @@
     <Compile Include="Model\Expressions\ReferenceNode.cs" />
     <Compile Include="Model\Expressions\ValueNode.cs" />
     <Compile Include="Model\Nodes\CommentNode.cs" />
+    <Compile Include="Model\Nodes\ContentNode.cs" />
+    <Compile Include="Model\Nodes\Functions\UrlFunction.cs" />
     <Compile Include="Model\Nodes\Functions\IfFunction.cs" />
     <Compile Include="Model\Nodes\ElseNode.cs" />
     <Compile Include="Model\Nodes\ImportNode.cs" />

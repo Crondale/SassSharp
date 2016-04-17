@@ -6,6 +6,7 @@ namespace SassSharp.Model.Nodes
     {
         private readonly List<CodeNode> _nodes = new List<CodeNode>();
         protected readonly Dictionary<string, VariableNode> _variables = new Dictionary<string, VariableNode>();
+        protected ScopeNode _content = null;
 
         public ScopeNode()
         {
@@ -29,6 +30,19 @@ namespace SassSharp.Model.Nodes
         {
             node.Parent = this;
             _nodes.Add(node);
+        }
+
+        public virtual void SetContent(ScopeNode content)
+        {
+            _content = content;
+        }
+
+        public virtual ScopeNode GetContent()
+        {
+            if (_content != null)
+                return _content;
+
+            return Parent.GetContent();
         }
 
         public virtual void SetVariable(VariableNode node)

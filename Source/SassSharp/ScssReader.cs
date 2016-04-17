@@ -309,6 +309,8 @@ namespace SassSharp
 
                 if (c == ' ')
                     break;
+                if (c == ';')
+                    break;
 
                 buffer.Append(c);
             }
@@ -324,6 +326,9 @@ namespace SassSharp
                     break;
                 case "mixin":
                     ReadMixin(currentScope);
+                    break;
+                case "content":
+                    ReadContent(currentScope);
                     break;
                 case "include":
                     ReadInclude(currentScope);
@@ -418,22 +423,46 @@ namespace SassSharp
         {
             var name = ReadName();
 
-            var args = ReadArgumentDefinition();
+            VariableNode[] args = new VariableNode[0];
 
-            var node = new MixinNode(name, args.ToArray());
+            SkipWhitespace();
+
+            if (Peek() == '(')
+                args = ReadArgumentDefinition().ToArray();
+
+            var node = new MixinNode(name, args);
             Expect('{');
             ReadScopeContent(node);
             currentScope.Add(node);
         }
 
+        private void ReadContent(ScopeNode currentScope)
+        {
+            currentScope.Add(new ContentNode());
+        }
+
         private void ReadInclude(ScopeNode currentScope)
         {
             var name = ReadName();
-            var args = ReadArgumentCall();
-            Expect(';');
+            ValueList args = new ValueList();
+
+            SkipWhitespace();
+
+            if (Peek() == '(')
+                args = ReadArgumentCall();
+
+            SkipWhitespace();
 
             var result = new IncludeNode(name, args);
             currentScope.Add(result);
+
+            if (Peek() == '{')
+            {
+                Expect('{');
+                ReadScopeContent(result);
+            }
+            else
+                Expect(';');
         }
 
         private void ReadFunction(ScopeNode currentScope)
@@ -706,7 +735,16 @@ namespace SassSharp
                         break;
                 }
 
-                expressionNode.Operator = op;
+                //TODO Fix this opening slash hack
+                if (expressionNode is ValueNode && ((ValueNode) expressionNode).Type == ValueNode.ValueNodeType.Text &&
+                    op == '/')
+                {
+                    var vn = ((ValueNode) expressionNode);
+                    expressionNode = new ValueNode("/" + vn.Value);
+                }
+                else
+                    expressionNode.Operator = op;
+
                 tempNodes.Add(expressionNode);
             }
 

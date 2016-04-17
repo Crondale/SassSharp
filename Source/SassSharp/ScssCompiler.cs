@@ -148,6 +148,11 @@ namespace SassSharp
 
                     scope.SetMixin(n);
                 }
+                else if (node is ContentNode)
+                {
+                    var sn = scope.GetContent();
+                    ProcessScope(package, sn, root, selector, level - 1, nspace);
+                }
                 else if (node is IfNode)
                 {
                     var n = (IfNode) node;
@@ -184,7 +189,7 @@ namespace SassSharp
                     var mn = scope.GetMixin(n.MixinName);
 
 
-                    mn.Initialize(n.Arguments);
+                    mn.Initialize(n);
 
                     ProcessScope(package, mn, root, selector, level);
                 }

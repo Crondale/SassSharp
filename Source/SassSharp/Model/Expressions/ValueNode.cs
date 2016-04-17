@@ -14,8 +14,6 @@ namespace SassSharp.Model.Expressions
         }
 
         private readonly string _textValue;
-
-        private readonly ValueNodeType _type = ValueNodeType.Text;
         private readonly double _value;
 
         public ValueNode(double value, string unit)
@@ -23,14 +21,14 @@ namespace SassSharp.Model.Expressions
             _value = value;
             _textValue = unit;
 
-            _type = ValueNodeType.Value;
+            Type = ValueNodeType.Value;
         }
 
         public ValueNode(double value)
         {
             _value = value;
 
-            _type = ValueNodeType.Number;
+            Type = ValueNodeType.Number;
         }
 
         public ValueNode(string value)
@@ -54,9 +52,9 @@ namespace SassSharp.Model.Expressions
                 _textValue = m.Groups["unit"].Value;
 
                 if (_textValue == "")
-                    _type = ValueNodeType.Number;
+                    Type = ValueNodeType.Number;
                 else
-                    _type = ValueNodeType.Value;
+                    Type = ValueNodeType.Value;
             }
             else
             {
@@ -64,11 +62,13 @@ namespace SassSharp.Model.Expressions
             }
         }
 
+        public ValueNodeType Type { get; } = ValueNodeType.Text;
+
         public override string Value
         {
             get
             {
-                switch (_type)
+                switch (Type)
                 {
                     case ValueNodeType.Number:
                         return _value.ToString();
@@ -121,17 +121,17 @@ namespace SassSharp.Model.Expressions
 
         private static ValueNode checkAndCalculate(ValueNode x, ValueNode y, Func<double, double, double> calculation)
         {
-            if (x._type == ValueNodeType.Text)
+            if (x.Type == ValueNodeType.Text)
                 throw new Exception("Cannot calculate on texts");
 
-            if (y._type == ValueNodeType.Text)
+            if (y.Type == ValueNodeType.Text)
                 throw new Exception("Cannot calculate on texts");
 
-            if (x._type == ValueNodeType.Value)
+            if (x.Type == ValueNodeType.Value)
             {
                 return new ValueNode(calculation(x._value, y._value), x._textValue);
             }
-            if (y._type == ValueNodeType.Value)
+            if (y.Type == ValueNodeType.Value)
             {
                 return new ValueNode(calculation(x._value, y._value), y._textValue);
             }
