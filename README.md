@@ -23,7 +23,7 @@ string cssContent = sres.CompiledContent;
 * ~~@mixin~~
 * ~~@media~~
 * ~~@if~~
-* @each
+* ~~@each~~
 * @for
 
 ##Contribution
