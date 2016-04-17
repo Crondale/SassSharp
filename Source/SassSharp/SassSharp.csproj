@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\ScssReaderException.cs" />
     <Compile Include="IO\IFileManager.cs" />
     <Compile Include="IO\PathDirectory.cs" />
     <Compile Include="IO\PathFile.cs" />

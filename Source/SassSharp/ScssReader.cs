@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using SassSharp.Exceptions;
 using SassSharp.IO;
 using SassSharp.Model;
 using SassSharp.Model.Expressions;
@@ -88,12 +89,26 @@ namespace SassSharp
             SkipWhitespace();
 
             if (EndOfStream)
-                throw new Exception($"Expected {expected}, end of stream");
+                throw new ScssReaderException($"Expected {expected}, end of stream", File.Path, _lineNumber);
 
             var c = (char) Read();
 
             if (c != expected)
-                throw new Exception($"Expected {expected}, found {c}");
+                throw new ScssReaderException($"Expected '{expected}', found '{c}'", File.Path, _lineNumber);
+        }
+
+        private void Optional(char expected, bool skipWhitespace = true)
+        {
+            if (skipWhitespace)
+                SkipWhitespace();
+
+            if (EndOfStream)
+                throw new ScssReaderException($"Expected {expected}, end of stream", File.Path, _lineNumber);
+
+            var c = (char) Peek();
+
+            if (c == expected)
+                Read();
         }
 
         private string ReadUntil(char endChar)
@@ -198,7 +213,7 @@ namespace SassSharp
                             goto default;
                         case ';':
                         {
-                            throw new Exception("Unexpected ;");
+                            throw new ScssReaderException("Unexpected ;", File.Path, _lineNumber);
                         }
                         case ':':
                             var pc = (char) Peek();
@@ -226,7 +241,7 @@ namespace SassSharp
                                 }
                                 else
                                 {
-                                    throw new Exception("Expected { or ;");
+                                    throw new ScssReaderException("Expected { or ;", File.Path, _lineNumber);
                                 }
 
                                 /*
@@ -302,20 +317,7 @@ namespace SassSharp
 
         private void ReadAt(ScopeNode currentScope)
         {
-            var buffer = new StringBuilder();
-            while (!EndOfStream)
-            {
-                var c = (char) Read();
-
-                if (c == ' ')
-                    break;
-                if (c == ';')
-                    break;
-
-                buffer.Append(c);
-            }
-
-            var type = buffer.ToString();
+            string type = ReadName();
 
             SkipWhitespace();
 
@@ -349,7 +351,7 @@ namespace SassSharp
                     ReadElse(currentScope);
                     break;
                 default:
-                    throw new Exception($"Could not recognize @{type}");
+                    throw new ScssReaderException($"Could not recognize @{type}", File.Path, _lineNumber);
             }
         }
 
@@ -439,6 +441,7 @@ namespace SassSharp
         private void ReadContent(ScopeNode currentScope)
         {
             currentScope.Add(new ContentNode());
+            Optional(';');
         }
 
         private void ReadInclude(ScopeNode currentScope)
