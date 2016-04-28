@@ -349,6 +349,9 @@ namespace SassSharp
                 case "each":
                     ReadEach(currentScope);
                     break;
+                case "for":
+                    ReadFor(currentScope);
+                    break;
                 default:
                     throw new ScssReaderException($"Could not recognize @{type}", File.Path, _lineNumber);
             }
@@ -400,12 +403,31 @@ namespace SassSharp
         {
             Expect('$');
             var varName = ReadName();
-            
+
             Expect("in");
             var val = ReadValueList('{');
             Expect('{');
 
             var node = new EachNode(new VariableNode(varName), val);
+            currentScope.Add(node);
+
+            ReadScopeContent(node);
+        }
+
+        private void ReadFor(ScopeNode currentScope)
+        {
+            Expect('$');
+            var varName = ReadName();
+
+            Expect("from");
+            SkipWhitespace();
+            var from = ReadValueList('t');
+            Expect("through");
+            SkipWhitespace();
+            var through = ReadValueList('{');
+            Expect('{');
+
+            var node = new ForNode(new VariableNode(varName), new Expression(from), new Expression(through));
             currentScope.Add(node);
 
             ReadScopeContent(node);

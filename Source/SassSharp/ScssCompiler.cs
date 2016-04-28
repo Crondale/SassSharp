@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using SassSharp.Exceptions;
 using SassSharp.IO;
 using SassSharp.Model;
 using SassSharp.Model.Css;
+using SassSharp.Model.Expressions;
 using SassSharp.Model.Nodes;
 
 namespace SassSharp
@@ -168,6 +171,27 @@ namespace SassSharp
 
                     foreach (var value in n.List)
                     {
+                        var.Expression = new Expression(value);
+                        n.SetVariable(var);
+                        ProcessScope(package, n, root, selector, level, nspace);
+                    }
+                }
+                else if (node is ForNode)
+                {
+                    var n = (ForNode) node;
+                    var var = n.Variable;
+                    int from = int.Parse(n.From.Resolve(scope).Value);
+
+                    int to = 0;
+                    string toStr = n.Through.Resolve(scope).Value;
+
+                    if (!int.TryParse(toStr, out to))
+                        throw new Exception("Failed to parse to value");
+
+                    for (int i = from; i <= to; i++)
+                    {
+                        var value = new ValueNode(i.ToString());
+
                         var.Expression = new Expression(value);
                         n.SetVariable(var);
                         ProcessScope(package, n, root, selector, level, nspace);
