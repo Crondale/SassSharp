@@ -27,6 +27,7 @@ namespace SassSharp.Model
 
         public void LoadBuiltInFunctions()
         {
+            SetFunction(new CssFunction("attr"));
             SetFunction(new IfFunction());
             SetFunction(new UrlFunction());
         }

@@ -65,6 +65,7 @@
     <Compile Include="Model\Nodes\ExtendNode.cs" />
     <Compile Include="Model\Nodes\EachNode.cs" />
     <Compile Include="Model\Nodes\ForNode.cs" />
+    <Compile Include="Model\Nodes\Functions\CssFunction.cs" />
     <Compile Include="Model\Nodes\Functions\UrlFunction.cs" />
     <Compile Include="Model\Nodes\Functions\IfFunction.cs" />
     <Compile Include="Model\Nodes\ElseNode.cs" />
