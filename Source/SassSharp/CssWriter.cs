@@ -52,6 +52,9 @@ namespace SassSharp
 
         private void WriteMedia(int lastLevel, CssMedia node)
         {
+            if (node.Level == 0 && lastLevel != -1)
+                Write(_lineBreak);
+
             for (var i = 0; i < node.Level; i++)
                 Write(_indentation);
 

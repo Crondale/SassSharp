@@ -129,9 +129,17 @@ namespace SassSharp
 
                     root.Add(s);
 
-                    selector = new CssSelector(selector.Selector, level + 2);
-                    s.Add(selector);
-                    ProcessScope(package, (ScopeNode) n, s, selector, level + 2, nspace);
+                    int nextLevel = level + 1;
+
+                    if (selector != null)
+                    {
+                        selector = new CssSelector(selector.Selector, level + 2);
+                        s.Add(selector);
+
+                        nextLevel++;
+                    }
+
+                    ProcessScope(package, (ScopeNode) n, s, selector, nextLevel, nspace);
                 }
                 else if (node is CommentNode)
                 {

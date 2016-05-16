@@ -4,3 +4,9 @@
     width: 500px;
   }
 }
+
+@media screen and (orientation: landscape) {
+    .topbar {
+        width: 500px;
+    }
+}
