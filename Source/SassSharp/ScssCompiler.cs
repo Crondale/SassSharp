@@ -79,13 +79,13 @@ namespace SassSharp
                     continue;
 
                 CssSelector selector = (CssSelector) cssNode;
-
+                string orgSelector = selector.Selector;
                 foreach (var extension in package.Extensions)
                 {
                     if (selector.Selector.Contains(extension.Super))
                     {
                         selector.Selector = selector.Selector + ", " +
-                                            selector.Selector.Replace(extension.Super, extension.Selector);
+                                            orgSelector.Replace(extension.Super, extension.Selector);
                     }
                 }
             }
