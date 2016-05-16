@@ -188,12 +188,34 @@ namespace SassSharp
                 else if (node is EachNode)
                 {
                     var n = (EachNode) node;
-                    var var = n.Variable;
+                    var var = n.Variables;
 
                     foreach (var value in n.List)
                     {
-                        var.Expression = new Expression(value);
-                        n.SetVariable(var);
+                        if (var.Count == 1)
+                        {
+                            var[0].Expression = new Expression(value);
+                            n.SetVariable(var[0]);
+                        }
+                        else
+                        {
+                            if (!(value is ValueList))
+                                throw new Exception("This must be a list");
+
+                            var subList = (ValueList) value;
+
+                            // There is a bug in the reader causing unecessary levels of value lists
+                            // TODO UNDONE
+                            if (subList.Count == 1)
+                                subList = (ValueList) subList[0];
+
+                            for (int i = 0; i < var.Count; i++)
+                            {
+                                var[i].Expression = new Expression(subList[i]);
+                                n.SetVariable(var[i]);
+                            }
+                        }
+
                         ProcessScope(package, n, root, selector, level, nspace);
                     }
                 }

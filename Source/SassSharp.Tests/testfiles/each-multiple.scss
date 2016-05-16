@@ -1,0 +1,10 @@
+﻿
+@each $size, $color, $cursor in (1px, black, default),
+                                  (2px, blue, pointer),
+                                  (3px, white, move) {
+  .#{$color}-icon {
+    font-size: $size;
+    border: 2px solid $color;
+    cursor: $cursor;
+  }
+}

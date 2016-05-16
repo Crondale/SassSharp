@@ -410,14 +410,13 @@ namespace SassSharp
 
         private void ReadEach(ScopeNode currentScope)
         {
-            Expect('$');
-            var varName = ReadName();
+            var varNames = ReadValueList('i');
 
             Expect("in");
             var val = ReadValueList('{');
             Expect('{');
 
-            var node = new EachNode(new VariableNode(varName), val);
+            var node = new EachNode(varNames, val);
             currentScope.Add(node);
 
             ReadScopeContent(node);
