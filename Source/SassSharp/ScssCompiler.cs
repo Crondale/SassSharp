@@ -59,6 +59,7 @@ namespace SassSharp
         private void ProcessTree(ScssPackage tree, CssSheet sheet)
         {
             ProcessScope(tree, tree, sheet, null, -1);
+            ProcessExtensions(tree, sheet);
         }
 
         private void ProcessImport(string path, ScssPackage fromPackage, ScopeNode scope, CssRoot root,
@@ -68,6 +69,26 @@ namespace SassSharp
             var tree = TreeFromFile(file);
 
             ProcessScope(tree, tree, root, selector, level, nspace);
+        }
+
+        private void ProcessExtensions(ScssPackage package, CssRoot root)
+        {
+            foreach (var cssNode in root.Nodes)
+            {
+                if (!(cssNode is CssSelector))
+                    continue;
+
+                CssSelector selector = (CssSelector) cssNode;
+
+                foreach (var extension in package.Extensions)
+                {
+                    if (selector.Selector.Contains(extension.Super))
+                    {
+                        selector.Selector = selector.Selector + ", " +
+                                            selector.Selector.Replace(extension.Super, extension.Selector);
+                    }
+                }
+            }
         }
 
         private void ProcessScope(ScssPackage package, ScopeNode scope, CssRoot root, CssSelector selector, int level,
@@ -196,6 +217,16 @@ namespace SassSharp
                         n.SetVariable(var);
                         ProcessScope(package, n, root, selector, level, nspace);
                     }
+                }
+                else if (node is ExtendNode)
+                {
+                    var n = (ExtendNode) node;
+
+                    package.AddExtension(new ScssExtension()
+                    {
+                        Selector = selector.Selector,
+                        Super = ((ExtendNode) node).Selector
+                    });
                 }
                 else if (node is FunctionNode)
                 {

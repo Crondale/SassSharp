@@ -115,7 +115,7 @@ namespace SassSharp
                 SkipWhitespace();
 
             if (EndOfStream)
-                throw new ScssReaderException($"Expected {expected}, end of stream", File.Path, _lineNumber);
+                return;
 
             var c = (char) Peek();
 
@@ -352,6 +352,9 @@ namespace SassSharp
                 case "for":
                     ReadFor(currentScope);
                     break;
+                case "extend":
+                    ReadExtend(currentScope);
+                    break;
                 default:
                     throw new ScssReaderException($"Could not recognize @{type}", File.Path, _lineNumber);
             }
@@ -397,6 +400,12 @@ namespace SassSharp
             parentIf.Elses.Add(elseNode);
 
             ReadScopeContent(elseNode);
+        }
+
+        private void ReadExtend(ScopeNode currentScope)
+        {
+            string selector = ReadUntil(';');
+            currentScope.Add(new ExtendNode(selector));
         }
 
         private void ReadEach(ScopeNode currentScope)
@@ -501,7 +510,7 @@ namespace SassSharp
                 ReadScopeContent(result);
             }
             else
-                Expect(';');
+                Optional(';');
         }
 
         private void ReadFunction(ScopeNode currentScope)

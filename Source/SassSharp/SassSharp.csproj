@@ -62,6 +62,7 @@
     <Compile Include="Model\Expressions\ValueNode.cs" />
     <Compile Include="Model\Nodes\CommentNode.cs" />
     <Compile Include="Model\Nodes\ContentNode.cs" />
+    <Compile Include="Model\Nodes\ExtendNode.cs" />
     <Compile Include="Model\Nodes\EachNode.cs" />
     <Compile Include="Model\Nodes\ForNode.cs" />
     <Compile Include="Model\Nodes\Functions\UrlFunction.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="Model\Nodes\ReturnNode.cs" />
     <Compile Include="Model\Nodes\ScopeNode.cs" />
     <Compile Include="Model\Nodes\PropertyNode.cs" />
+    <Compile Include="Model\ScssExtension.cs" />
     <Compile Include="Model\ScssPackage.cs" />
     <Compile Include="Model\Nodes\SelectorNode.cs" />
     <Compile Include="Model\Nodes\VariableNode.cs" />
