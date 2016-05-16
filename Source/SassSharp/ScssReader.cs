@@ -234,6 +234,12 @@ namespace SassSharp
                             {
                                 buffer.Append(c);
                             }
+                            else if (pc == ':')
+                            {
+                                buffer.Append(c);
+                                buffer.Append(pc);
+                                Read();
+                            }
                             else
                             {
                                 var pn = new PropertyNode();
