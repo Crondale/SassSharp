@@ -10,7 +10,7 @@ var result = compiler.CompileFile(sourcePath);
 string cssContent = sres.CompiledContent;
 ```
 
-##Roadmap feature support
+##Roadmap feature support (Line through is done)
 * ~~Nested Selectors~~
 * ~~Lists~~
 * ~~Sass script~~
@@ -22,10 +22,11 @@ string cssContent = sres.CompiledContent;
 * ~~@import~~
 * ~~@mixin~~
 * ~~@media~~
+* ~~@extend~~
 * ~~@if~~
 * ~~@each~~
-* @for
+* ~~@for~~
 
 ##Contribution
-New features and bug fixes is done tests first.  Tests are done by creating scss files in testfiles folder and are automatically compared using LibSass.
+New features and bug fixes is done tests first.  Tests are done by creating scss files in testfiles folder and are automatically compared using LibSass.  Please feel free to suggest unit tests or fork the repo.
 
